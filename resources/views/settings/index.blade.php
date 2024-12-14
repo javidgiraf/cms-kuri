@@ -34,7 +34,7 @@
                                     <th scope="col">#</th>
                                     <th scope="col">Setting Option</th>
                                     <th scope="col">Setting Option Value</th>
-                                    <th scope="col">Action</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>

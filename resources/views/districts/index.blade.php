@@ -35,7 +35,7 @@
                                     <th scope="col">State</th>
                                     <th scope="col">District</th>
                                     <th scope="col">Code</th>
-                                    <th scope="col">Action</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>

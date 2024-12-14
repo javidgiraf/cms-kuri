@@ -145,7 +145,9 @@ use App\Services\UserService;
                                         <p><span {{ isset($user->customer) ? ($user->customer->is_verified == true ? 'class=active' : 'class=inactive') : 'class=inactive' }}> {{ isset($user->customer) ? ($user->customer->is_verified == true ? 'Verified' : 'Not Verified') : 'Not Verified' }} </span></p>
                                     </td>
                                     <td>
-                                        {{ ($user->UserSubscriptions->first()) ? 
+
+                                        {{ ($user->UserSubscriptions->first()) ?
+
                                                 $user->UserSubscriptions->first()->scheme->title : '' }}
                                     </td>
                                     <td>{{ isset($user->customer) ? $user->customer->mobile : '' }}</td>

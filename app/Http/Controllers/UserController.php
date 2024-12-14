@@ -254,7 +254,7 @@ class UserController extends Controller
     //     //  return redirect()->route('users.index')->with('success', 'Deposit Paid successfully');
     // }
 
-    public  function payDeposit(DepositPostRequest $request, UserService $userService)
+    public function payDeposit(DepositPostRequest $request, UserService $userService)
     {
         $input = $request->all();
         $input['subscription_id'] = decrypt($input['subscription_id']);

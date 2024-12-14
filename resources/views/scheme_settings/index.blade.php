@@ -38,7 +38,7 @@
                   <th scope="col">Denomination</th>
                   <th scope="col">Due Duration</th>
                   <th scope="col">Status</th>
-                  <th scope="col">Actions</th>
+                  <th scope="col"></th>
                 </tr>
               </thead>
               <tbody>
