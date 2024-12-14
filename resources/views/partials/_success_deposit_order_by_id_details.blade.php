@@ -1,6 +1,6 @@
 <div class="modal-content">
   <div class="modal-header">
-    <h5 class="modal-title" id="exampleModalLabel">Order Details</h5>
+    <h5 class="modal-title" id="exampleModalLabel">Deposit Details</h5>
 
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
   </div>
@@ -13,7 +13,7 @@
 
             <div class="ps-3">
               <dl class="row">
-                <dt class="col-sm-5">Order Id</dt>
+                <dt class="col-sm-5">Deposit Id</dt>
                 <dt class="col-sm-1 head">:</dt>
                 <dd class="col-sm-5"> {{ $success_deposit_by_order['order_id'] }}</dd>
 
@@ -21,9 +21,7 @@
                 <dt class="col-sm-1 head">:</dt>
                 <dd class="col-sm-5">{{ date('d-m-Y', strtotime($success_deposit_by_order['paid_at'])) }}</dd>
 
-                <dt class="col-sm-5">Total Scheme Amount</dt>
-                <dt class="col-sm-1 head">:</dt>
-                <dd class="col-sm-5">{{ \App\Models\Setting::CURRENCY }} {{ number_format($success_deposit_by_order['total_scheme_amount'], 2) }}</dd>
+      
                 <dt class="col-sm-5">User Type</dt>
                 <dt class="col-sm-1 head">:</dt>
                 <dd class="col-sm-5">{{ $success_deposit_by_order['user_type'] == 'admin' ? 'Admin' : 'Customer' }}</dd>
@@ -43,14 +41,11 @@
 
             <div class="ps-3">
               <dl class="row">
-                <dt class="col-sm-5">Service Charge</dt>
+              
+                <dt class="col-sm-5">Total Amount</dt>
                 <dt class="col-sm-1 head">:</dt>
-                <dd class="col-sm-5">{{ \App\Models\Setting::CURRENCY }} {{ number_format($success_deposit_by_order['service_charge'], 2) }}</dd>
-
-                <dt class="col-sm-5">GST Charge</dt>
-                <dt class="col-sm-1 head">:</dt>
-                <dd class="col-sm-5">{{ \App\Models\Setting::CURRENCY }} {{ number_format($success_deposit_by_order['gst_charge'], 2) }}</dd>
-
+                <dd class="col-sm-5">{{ \App\Models\Setting::CURRENCY }} {{ number_format($success_deposit_by_order['total_scheme_amount'], 2) }}</dd>
+                
                 <dt class="col-sm-5">Final Amount</dt>
                 <dt class="col-sm-1 head">:</dt>
                 <dd class="col-sm-5">{{ \App\Models\Setting::CURRENCY }} {{ number_format($success_deposit_by_order['final_amount'], 2) }}</dd>
@@ -69,7 +64,8 @@
       </div><!-- End Sales Card -->
     </div>
   </div>
-  <table class="table">
+  <div class="m-4">
+  <table class="table" width="100%">
     <thead>
       <tr>
         <th scope="col">#</th>
@@ -94,6 +90,7 @@
     </tbody>
 
   </table>
+  </div>
   @if($success_deposit_by_order['payment_type'] != 'cash')
   <div class="card-body" id="enter-trasaction-details">
     <h5 class="card-title" style="text-align: left;">Enter Transaction Details</h5>

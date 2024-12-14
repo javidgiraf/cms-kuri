@@ -3,12 +3,12 @@
 
 <main id="main" class="main">
     <div class="pagetitle">
-        <h1>User Subscription</h1>
+        <h1>Customer Information</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{route('home')}}">Home</a></li>
-                <li class="breadcrumb-item"><a href="{{route('users.index')}}">Users</a></li>
-                <li class="breadcrumb-item active">Show User Subscription</li>
+                <li class="breadcrumb-item"><a href="{{route('users.index')}}">Customers</a></li>
+                <li class="breadcrumb-item active">Show Customer Information</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->
@@ -40,8 +40,119 @@
                 <div class="row">
 
                     <!-- Sales Card -->
-                    <div class="col-xxl-5 col-md-5">
+                    <div class="col-xxl-6 col-md-6">
                         <div class="card info-card sales-card">
+
+                            <div class="card-body">
+                                <h5 class="card-title">Customer Details</h5>
+
+                                <div class="d-flex align-items-center">
+                                    
+                                    <div class="ps-3">
+                                        <dl class="row">
+                                            <dt class="col-sm-5">Customer </dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['name'] }}</dd>
+                                        
+                                            <dt class="col-sm-5">Email</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['email'] }}</dd>
+                                            
+                                            <dt class="col-sm-5">Mobile</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['customer']['mobile'] }}</dd>
+
+                                            @if($current_plan_history['user']['customer']['referrel_code'])
+                                            <dt class="col-sm-5">Referrel Code</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['customer']['referrel_code'] }}</dd>
+                                            @endif
+
+                                            
+                                            <dt class="col-sm-5">Aadhar No</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ ($current_plan_history['user']['customer']['aadhar_number']) ? 
+                                                $current_plan_history['user']['customer']['aadhar_number'] : __('xxxx-xxxx-xxxx') }}</dd>
+                                            
+
+                                            <dt class="col-sm-5">Pancard No</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ ($current_plan_history['user']['customer']['pancard_no']) ? 
+                                                $current_plan_history['user']['customer']['pancard_no'] : __('xxxxx-xxxxx') }}</dd>
+                                            
+                                        </dl>
+                                    </div>
+                                </div>
+
+                                @if($current_plan_history['user']['address'])    
+                                <h5 class="card-title">Customer Address</h5>
+
+                                <div class="d-flex align-items-center">
+                                    
+                                    <div class="ps-3">
+                                        <dl class="row">    
+                                
+                                            <dt class="col-sm-5">Address</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['address']['address'] }}</dd>    
+
+                                            <dt class="col-sm-5">District</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['address']['district']['name'] }}</dd> 
+                                            
+                                            <dt class="col-sm-5">Pincode</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['address']['pincode'] }}</dd> 
+
+                                            <dt class="col-sm-5">State</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['address']['state']['name'] }}</dd> 
+
+                                            <dt class="col-sm-5">Country</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['address']['country']['name'] }}</dd> 
+                                            
+                                        </dl>
+                                    </div>
+                                </div>
+                                @endif
+
+                                @if($current_plan_history['user']['nominee'])
+                                <h5 class="card-title">Nominee Details</h5>
+
+                                <div class="d-flex align-items-center">
+                                    
+                                    <div class="ps-3">
+                                        <dl class="row">
+                                            <dt class="col-sm-5">Nominee</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['nominee']['name'] }}</dd> 
+
+                                            <dt class="col-sm-5">Relationship</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['nominee']['relationship'] }}</dd> 
+
+                                            <dt class="col-sm-5">Phone No</dt>
+                                            <dt class="col-sm-1 head">:</dt>
+                                            <dd class="col-sm-5">{{ $current_plan_history['user']['nominee']['phone'] }}</dd> 
+                                        
+                                        </dl>
+
+                                    </div>
+                                    
+                                </div>
+                                @endif
+                            </div>
+
+                        </div>
+                    </div><!-- End Sales Card -->
+
+                    <!-- Revenue Card -->
+
+                    <!-- Customers Card -->
+                    <div class="col-xxl-6 col-xl-6">
+
+                        <div class="card info-card customers-card">
 
 
                             <div class="card-body">
@@ -75,18 +186,6 @@
                                     @endif
                                 </div>
                             </div>
-                        </div>
-                    </div><!-- End Sales Card -->
-
-                    <!-- Revenue Card -->
-
-                    <!-- Customers Card -->
-                    <div class="col-xxl-7 col-xl-7">
-
-                        <div class="card info-card customers-card">
-
-
-
                             <div class="card-body">
                                 <h5 class="card-title">Subscription Details</h5>
 
@@ -94,13 +193,11 @@
 
                                     <div class="ps-3">
                                         <dl class="row">
-                                            <dt class="col-sm-5">User</dt>
-                                            <dt class="col-sm-1 head">:</dt>
-                                            <dd class="col-sm-5">{{ $current_plan_history['user']['name'] }}</dd>
+                                    
 
-                                            <dt class="col-sm-5">Subscription Duration</dt>
+                                            <dt class="col-sm-5">Plan Period</dt>
                                             <dt class="col-sm-1 head">:</dt>
-                                            <dd class="col-sm-5">{{ date('d/m/Y', strtotime($current_plan_history['scheme_start_date'])) }} - {{ date('d/m/Y', strtotime($current_plan_history['scheme_end_date'])) }}</dd>
+                                            <dd class="col-sm-6">{{ date('d/m/Y', strtotime($current_plan_history['scheme_start_date'])) }} - {{ date('d/m/Y', strtotime($current_plan_history['scheme_end_date'])) }}</dd>
                                             <dt class="col-sm-5">Maturity Status</dt>
                                             <dt class="col-sm-1 head">:</dt>
                                             <dd class="col-sm-5" id='mat_status'>{{ ($current_plan_history['user_subscription']['is_closed'] == true) ? 'Closed' : 'Open' }}</dd>
@@ -108,13 +205,13 @@
                                             <dt class="col-sm-1 head">:</dt>
 
                                             @if($current_plan_history['user_subscription']['status'] == $userSubscription::STATUS_ACTIVE)
-                                            <dd class="col-sm-2 badge bg-success" id='sub_status'>Active</dd>
+                                            <dd class="col-sm-3 p-2 badge bg-success" id='sub_status'>Active</dd>
                                             @elseif($current_plan_history['user_subscription']['status'] == $userSubscription::STATUS_DISCONTINUE)
-                                            <dd class="col-sm-2 badge bg-danger" id='sub_status'>Discontinued</dd>
+                                            <dd class="col-sm-3 p-2 badge bg-danger" id='sub_status'>Discontinued</dd>
                                             @elseif($current_plan_history['user_subscription']['status'] == $userSubscription::STATUS_ONHOLD)
-                                            <dd class="col-sm-2 badge bg-warning" id='sub_status'>On Hold</dd>
+                                            <dd class="col-sm-3 p-2 badge bg-warning" id='sub_status'>On Hold</dd>
                                             @else
-                                            <dd class="col-sm-2 badge bg-secondary" id='sub_status'>In active</dd>
+                                            <dd class="col-sm-3 p-2 badge bg-secondary" id='sub_status'>In active</dd>
                                             @endif
 
 

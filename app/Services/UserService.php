@@ -32,7 +32,7 @@ class UserService
         $users =
             User::whereHas('roles', function ($query) {
                 $query->whereName('customer');
-            })->with('roles', 'customer')->latest()->paginate($perPage);
+            })->with('roles', 'customer', 'UserSubscriptions')->latest()->paginate($perPage);
         return  $users;
     }
 
@@ -188,8 +188,8 @@ class UserService
         $user_subscription = UserSubscription::with('scheme')->where('user_id', $user_id)->where('scheme_id', $scheme_id)->first();
         $user_subscription_deposits =  Deposit::where('subscription_id', $user_subscription_id)->get();
 
-        $start_date_str = $user_subscription->start_date;
-        $end_date_str = $user_subscription->end_date;
+        $start_date_str = ($user_subscription->start_date) ? date('Y-m-d', strtotime($user_subscription->start_date)) : NULL;
+        $end_date_str = ($user_subscription->end_date) ? date('Y-m-d', strtotime($user_subscription->end_date)) : NULL;
         $result_dates = $this->generateDates($start_date_str, $end_date_str);
         $rs_dates = [];
         foreach ($result_dates as &$d) {

@@ -14,16 +14,20 @@ use App\Helpers\LogActivity;
 use App\Http\Requests\CreateSubscriptionRequest;
 use App\Http\Requests\DepositPostRequest;
 use App\Http\Requests\TransactionPostRequest;
+use App\Models\Discontinue;
 use App\Models\Scheme;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\UserSubscription;
+use App\Models\SubscriptionHistory;
 use App\Services\SchemeService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use PDO;
 use PhpParser\Node\Expr\Print_;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -202,11 +206,12 @@ class UserController extends Controller
         $scheme_id =  $scheme->scheme_id;
         $current_plan_history = $userService->getCurrentPlanHistory($user_subscription_id, $user_id, $scheme_id);
         $data2 =  view('partials._unpaid_list_details_for_deposit')
-            ->with(compact('current_plan_history', 'user_subscription_id'))
+            ->with(compact('current_plan_history', 'user_subscription_id', 'scheme_id'))
             ->render();
 
         return response()->json(['data' => $data2]);
     }
+
     public function generateRandomNumber(UserService $userService)
     {
         try {
@@ -383,6 +388,7 @@ class UserController extends Controller
     public function userSubscriptions()
     {
         $userSubscriptions = UserSubscription::with('user', 'scheme')->get();
+        
         return view('subscriptions.index', compact('userSubscriptions'));
     }
 
@@ -424,5 +430,77 @@ class UserController extends Controller
             $fromDate,
             $toDate
         ), 'user-subscriptions-report.xlsx');
+    }
+
+    public function changeSubscriptionStatus(Request $request)
+    {
+        $inputs = $request->all();
+        $validator = Validator::make($inputs, [
+            'scheme_status' => ['required']
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                'success' => false, 
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $userSubscription = UserSubscription::findOrFail($inputs['subscription_id']);
+        $userSubscription->reason = $inputs['reason'];
+        $userSubscription->status = $inputs['scheme_status'];
+        $userSubscription->update();
+
+        SubscriptionHistory::whereSubscriptionId($inputs['subscription_id'])
+            ->update([
+                'status' => $inputs['scheme_status'],
+                'description' => $inputs['reason']
+            ]);
+        
+        if($inputs['scheme_status'] == UserSubscription::STATUS_DISCONTINUE)
+        {
+            Discontinue::updateOrCreate(
+                [
+                    'subscription_id' => $userSubscription->id
+                ],
+                [
+                    'final_amount' => $inputs['final_amount'] ?? 0,
+                    'settlement_amount' => $inputs['settlement_amount'] ?? 0,
+                    'paid_on' => Carbon::now()->format('Y-m-d'),
+                    'reason' => $inputs['reason'],
+                    'status' => $inputs['scheme_status'],
+                ]
+            );
+        }
+
+        return response()->json(['success' => true, 'message' => 'Status changed successfully', 'data' => $userSubscription]);    
+    }
+
+    public function changeMaturityStatus(Request $request)
+    {
+        $inputs = $request->all();
+        $validator = Validator::make($inputs, [
+            'maturity_status' => ['required']
+        ]);
+
+        if($validator->fails()) {
+            return response()->json([
+                'success' => false, 
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        $userSubscription = UserSubscription::findOrFail($inputs['subscription_id']);
+        $userSubscription->reason = $inputs['maturity_reason'];
+        $userSubscription->is_closed = $inputs['maturity_status'];
+        $userSubscription->update();
+
+        SubscriptionHistory::whereSubscriptionId($inputs['subscription_id'])
+            ->update([
+                'is_closed' => $inputs['maturity_status'],
+                'description' => $inputs['maturity_reason']
+            ]);
+
+        return response()->json(['success' => true, 'message' => 'Maturity Status changed successfully', 'data' => $userSubscription]);    
     }
 }

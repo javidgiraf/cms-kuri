@@ -79,7 +79,7 @@ class UserSubscriptionFilter extends Component
                 ->whereDate('start_date', '>=', date('Y-m-d', strtotime($this->from_date)));
         }
         $userSubscriptions = $query->orderBy('id', 'desc')->paginate(12)->appends(request()->query());
-
+        
 
         return view('livewire.user-subscription-filter', [
             'userSubscriptions' => $userSubscriptions,

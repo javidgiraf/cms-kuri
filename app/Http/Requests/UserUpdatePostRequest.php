@@ -31,7 +31,7 @@ class UserUpdatePostRequest extends FormRequest
 
         $rules = [
             'name' => ['required'],
-            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
+            'email' => ['nullable', 'email', Rule::unique('users', 'email')->ignore($id)],
             'referrel_code' => ['required', Rule::unique('customers', 'referrel_code')->ignore($customer_id)],
             'mobile' => [
                             'required', 

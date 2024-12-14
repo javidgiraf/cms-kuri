@@ -3,12 +3,12 @@
 
 <main id="main" class="main">
   <div class="pagetitle">
-    <h1>User Subscription</h1>
+    <h1>Subscription History</h1>
     <nav>
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{route('home')}}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{{route('users.index')}}">Users</a></li>
-        <li class="breadcrumb-item active">Update User Subscription</li>
+        <li class="breadcrumb-item"><a href="{{route('users.get-user-subscriptions')}}">Subscriptions</a></li>
+        <li class="breadcrumb-item active">Subscription History</li>
       </ol>
     </nav>
   </div><!-- End Page Title -->
@@ -43,39 +43,12 @@
             <h5 class="card-title"></h5>
 
             <!-- Default Tabs -->
-            <ul class="nav nav-tabs d-flex" id="myTabjustified" role="tablist">
-              <li class="nav-item flex-fill" role="presentation">
-                <button class="nav-link w-100 active" id="home-tab" data-id="subscriptionHistory" data-bs-toggle="tab" data-bs-target="#subscription-history" type="button" role="tab" aria-controls="subscription-history" aria-selected="true">Subscription History</button>
-              </li>
-              <!-- <li class="nav-item flex-fill" role="presentation">
-                <button class="nav-link w-100" id="profile-tab" data-id="upaidList" data-bs-toggle="tab" data-bs-target="#unpaid-list" type="button" role="tab" aria-controls="upaid-list" aria-selected="false">Unpaid List</button>
-              </li> -->
-              <!--  <li class="nav-item flex-fill" role="presentation">
-                <button class="nav-link w-100" id="contact-tab" data-id="depositSuccessList" data-bs-toggle="tab" data-bs-target="#deposit-success-list" type="button" role="tab" aria-controls="deposit-success-list" aria-selected="false">Successful Orders</button>
-              </li>
-              <li class="nav-item flex-fill" role="presentation">
-                <button class="nav-link w-100" id="contact-tab" data-id="failedorprocessingList" data-bs-toggle="tab" data-bs-target="#failed-or-processing-list" type="button" role="tab" aria-controls="failed-or-processing-list" aria-selected="false">Failed/Processing Orders</button>
-              </li> -->
-              <li class="nav-item flex-fill" role="presentation">
-                <button class="nav-link w-100" id="contact-tab" data-id="changeStatus" data-bs-toggle="tab" data-bs-target="#change-status" type="button" role="tab" aria-controls="change-status" aria-selected="false">Change Status</button>
-              </li>
-            </ul>
+            
             <div class="tab-content pt-2" id="myTabjustifiedContent">
               <div class="tab-pane fade show active" id="subscription-history" role="tabpanel" aria-labelledby="subscription-list-tab">
                 @include('users._user-schemes._subscription-history')
               </div>
-              <div class="tab-pane fade" id="unpaid-list" role="tabpanel" aria-labelledby="unpaid-list-tab">
-                @include('users._user-schemes._unpaid-list')
-              </div>
-              <div class="tab-pane fade" id="deposit-success-list" role="tabpanel" aria-labelledby="deposit-success-list-tab">
-                @include('users._user-schemes._deposit-success-list')
-              </div>
-              <div class="tab-pane fade" id="failed-or-processing-list" role="tabpanel" aria-labelledby="failed-or-processing-list-tab">
-                @include('users._user-schemes._failed-or-processing-list')
-              </div>
-              <div class="tab-pane fade" id="change-status" role="tabpanel" aria-labelledby="change-status-tab">
-                @include('users._user-schemes._change-status')
-              </div>
+            
             </div><!-- End Default Tabs -->
 
           </div>
@@ -117,6 +90,8 @@
     });
 
   }
+
+  subscriptionHistory();
 
   function upaidList() {
     $('#upaid-list tbody').empty();

@@ -38,6 +38,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @if(count($schemes) > 0)
                                 @foreach($schemes as $scheme)
                                 <tr>
                                     <th scope="row">{{ $loop->iteration }}</th>
@@ -56,7 +57,11 @@
                                     </form>
                                 </tr>
                                 @endforeach
-
+                                @else
+                                <tr>
+                                    <td colspan="5">No Records available in table</td>
+                                </tr>
+                                @endif
                             </tbody>
                         </table>
                         <!-- End Table with stripped rows -->

@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-body">
 
-                    <h5 class="card-title">Manage Users Orders Subscriptions</h5>
+                    <h5 class="card-title">Manage Customer Deposit Subscriptions</h5>
                     @include('layouts.partials.messages')
                     <!-- Table with stripped rows -->
 
@@ -95,7 +95,7 @@
 
                     </div>
                     <div class="table-responsive">
-                        <table class="table table-striped" style="width: 150%;">  
+                        <table class="table table-striped" style="width: 130%;">  
                             {{-- <div style='text-align: end' ;><a href="{{route('districts.create')}}" class="btn btn-primary"><i class="bi bi-align-middle"></i><span>Add District</span></a>
                     </div> --}}
 
@@ -103,48 +103,47 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col" width="10%">User</th>
-                            <th scope="col">Order</th>
-                            <th scope="col" width="10%">Date</th>
+                            <th scope="col">Deposit ID</th>
+                            <th scope="col" width="10%">Paid At</th>
                             <th scope="col" width="12%">Scheme</th>
-                            <th scope="col">Total Scheme Amount</th>
-                            <th scope="col">Service Charge</th>
-                            <th scope="col">GST Charge</th>
+                            <th scope="col">Total Amount</th>
                             <th scope="col">Final Amount</th>
                             <th scope="col">User Type</th>
                             <th scope="col">Payment Type</th>
                             <th scope="col">Status</th>
-                            <th scope="col" class="fixed-left">Action</th>
                         </tr>
                     </thead>
                     <tbody>
+                        @if(count($deposits) > 0)
                         @foreach($deposits as $deposit)
                         <tr>
                             <th scope="row">{{ $deposits->firstitem() + $loop->index }}</th>
                             <td>{{ $deposit->subscription?->user?->name }}</td>
-                            <td>{{ $deposit->order_id }}</td>
+                            <td>
+                                
+                                <a data-bs-toggle="modal" class="model" data-bs-target="#ExtralargeModal" style="color:blue; cursor: pointer; text-decoration: underline;" order_id="{{ encrypt($deposit->order_id) }}" status="{{ $deposit->status }}">
+                                    {{ $deposit->order_id }}
+                                </a>
+                            </td>
                             <td>{{ date('d-m-Y', strtotime($deposit->paid_at)) }}</td>
                             <td>{{ $deposit->subscription?->scheme?->title }}</td>
 
                             <td>
                                 {{ \App\Models\Setting::CURRENCY }} {{ number_format($deposit->total_scheme_amount, 2) }}
                             </td>
-                            <td>{{ \App\Models\Setting::CURRENCY }} {{ number_format($deposit->service_charge, 2) }}</td>
-                            <td>{{ \App\Models\Setting::CURRENCY }} {{ number_format($deposit->gst_charge, 2) }}</td>
+
                             <td>
                                 {{ \App\Models\Setting::CURRENCY }} {{ number_format($deposit->final_amount, 2) }}
                             </td>
                             <td>{{ $deposit->user_type == 'admin' ? 'Admin' : 'Customer' }}</td>
                             <td>{{ $deposit->payment_type }}</td>
 
-                            <td id="deposit_order_id_{{$deposit->id}}">@if($deposit->status=='1') Success @elseif($deposit->status=='2') Failed @else Processed @endif</td>
+                            <td id="deposit_order_id_{{$deposit->id}}">@if($deposit->status == '1') <span class="badge rounded-pill active p-2">Success</span> @elseif($deposit->status=='2') <span class="badge rounded-pill inactive p-2">Failed</span> @else <span class="badge rounded-pill bg-primary p-2">Processed</span> @endif</td>
 
 
 
 
                             <td class="fixed-left">
-                                <a data-bs-toggle="modal" class="model" data-bs-target="#ExtralargeModal" style="color:blue" order_id="{{encrypt($deposit->order_id)}}" status="{{$deposit->status}}">
-                                    <i class="bi bi-eye"></i>
-                                </a>
 
                                 {{-- <a href="{{route('users.edit-scheme-details',[encrypt($userSubscription->id),encrypt($userSubscription->user?->id),encrypt($userSubscription->scheme?->id)])}}" style="margin-right: 10px;"><i class="bi bi-pencil-square"></i></a> --}}
                                 {{-- <a href="javascript:void(0);" onclick="event.preventDefault();
@@ -158,6 +157,11 @@
 
                         </tr>
                         @endforeach
+                        @else
+                            <tr>
+                                <td colspan="10">No Records available in table</td>
+                            </tr>
+                        @endif
                         <div class="modal fade" id="ExtralargeModal" tabindex="-1">
                             <div class="modal-dialog modal-xl fetch-deposit-list">
                             </div>

@@ -18,7 +18,7 @@
          Please check the list of unpaid date to pay from admin. </p>
        <div class="success"></div>
        <div class="error_transaction_msg"></div>
-      
+
        <table class="table" id="upaid-list">
          <thead>
            <tr>
@@ -31,6 +31,7 @@
            </tr>
          </thead>
          <tbody>
+           @if(count($current_plan_history['result_dates']) > 0)
            @foreach($current_plan_history['result_dates'] as $result_date)
 
            @if($result_date['status']=='0'||$result_date['status']=='2')
@@ -40,13 +41,19 @@
 
              </th>
              <td id="date{{$result_date['date']}}">{{ $result_date['date'] }}</td>
-             <td width="30%" id="amount{{$result_date['date']}}">{{ $result_date['amount'] }}</td>
+             <td width="30%" id="amount{{$result_date['date']}}">@if($result_date['amount'] != null) {{ $result_date['amount'] }} @else <input type="text" name="amount" id="deposit_amount{{ $result_date['date'] }}" class="form-control"> @endif</td>
 
 
 
            </tr>
            @endif
            @endforeach
+
+           @else
+           <tr>
+             <td colspan="3">No Records available in table</td>
+           </tr>
+           @endif
          </tbody>
 
        </table>
@@ -92,14 +99,14 @@
                        <div class="col-sm-12">
                          <input type="text" class="form-control" id="transaction_no" name="transaction_no">
                          <span class="transaction_no"></span>
-                        </div>
+                       </div>
                      </div>
                      <div class="row mb-3">
                        <label for="inputEmail3" class="col-sm-12 col-form-label">Receipt Upload</label>
                        <div class="col-sm-12">
                          <input type="file" class="form-control" name="receipt_upload" id="receipt_upload" accept=".svg,.png,.jpeg,.jpg,.webp,.pdf">
                          <span class="receipt_upload"></span>
-                        </div>
+                       </div>
                      </div>
                      <div class="row mb-3">
                        <label for="inputEmail3" class="col-sm-12 col-form-label">Payment Method</label>
@@ -181,42 +188,55 @@
          var totalAmount = 0;
          $('.btn-add-deposit-model').on('click', function() {
            $('.error_transaction_msg').removeClass('alert alert-danger').html('');
-
            clearTable(); // Clear the table before appending new rows
-           // Reset total amount before recalculating
-           totalAmount = 0;
-           checkedPermissions = [];
-           $.each($('.permission'), function() {
+           totalAmount = 0; // Reset total amount
+           checkedPermissions = []; // Reset the permissions array
+           let hasZeroAmount = false; // Flag to track zero amounts
 
+           $.each($('.permission'), function() {
              if ($(this).is(':checked')) {
-               var id = $(this).attr('id');
-               var date = id;
-               var amount = $('#amount' + id).html();
-               var amt = parseFloat(amount);
-               totalAmount += amt;
-               // Create a table row with the checked values
-               // Create an object to store checked permission details
-               var permissionObject = {
+               const id = $(this).attr('id');
+               const date = id;
+               let amount = $('#amount' + id).html();
+
+               // If amount is not set in the table cell, check input field
+               if (!amount || isNaN(amount)) {
+                 amount = $("#deposit_amount" + id).val();
+               }
+
+               amount = parseFloat(amount || 0); // Ensure amount is a valid number
+
+               if (amount === 0) {
+                 hasZeroAmount = true; // Set flag if zero amount is found
+               }
+
+               totalAmount += amount; // Add to total amount
+
+               // Push the permission object to the array
+               checkedPermissions.push({
                  date: date,
                  amount: amount
-               };
-               // Push the permission object to the array
-               checkedPermissions.push(permissionObject);
-               var row = $('<tr>').append(
-                 //$('<td>').text(id),
+               });
+
+               // Create the table row
+               const row = $('<tr>').append(
                  $('<td>').text(date),
                  $('<td>').text(number_format(amount, 2, '.', ','))
                );
-
-               // Append the row to the table
                table.append(row);
-
-               $('#exampleModal').modal('show');
-
              }
            });
-           $('#total-amount-value').text(number_format(totalAmount, 2, '.', ','));
 
+           // Show error message if zero amount is detected
+           if (hasZeroAmount) {
+             
+              toastr.error('Error: One or more selected items have an amount of zero. Please check and update the amounts.');
+             return false;
+           }
+
+           // Display the modal if validation passes
+           $('#total-amount-value').text(number_format(totalAmount, 2, '.', ','));
+           $('#exampleModal').modal('show');
          });
        </script>
        <script>

@@ -97,11 +97,11 @@ use App\Services\UserService;
         }
     </style>
     <div class="pagetitle">
-        <h1>Users</h1>
+        <h1>{{ __('Customers') }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{route('home')}}">Home</a></li>
-                <li class="breadcrumb-item active">Users</li>
+                <li class="breadcrumb-item"><a href="{{route('home')}}">{{ __('Home') }}</a></li>
+                <li class="breadcrumb-item active">{{ __('Customers') }}</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->
@@ -114,8 +114,8 @@ use App\Services\UserService;
 
                 <div class="card">
                     <div class="card-title d-flex justify-content-between m-3 mt-0">
-                        <h5><b>Manage Users</b></h5>
-                        <a href="{{route('users.create')}}" class="btn btn-primary"><i class="bi bi-align-middle"></i> <span class="text-white">Create User</span></a>
+                        <h5><b>{{ __('Manage Customers') }}</b></h5>
+                        <a href="{{route('users.create')}}" class="btn btn-primary"><i class="bi bi-align-middle"></i> <span class="text-white">Add Customer</span></a>
                     </div>
                     <div class="card-body table-responsive">
 
@@ -127,12 +127,12 @@ use App\Services\UserService;
                                 <tr>
                                     <th scope="col">#</th>
                                     <th scope="col">Name</th>
-                                    <th scope="col"></th>
-                                    <th scope="col">Email</th>
+                                    <th scope="col">Scheme</th>
                                     <th scope="col">Phone</th>
                                     <th scope="col">Profile Completion</th>
+                                    <th scope="col">Created At</th>
                                     <th scope="col">Status</th>
-                                    <th scope="col">Action</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -145,9 +145,9 @@ use App\Services\UserService;
                                         <p><span {{ isset($user->customer) ? ($user->customer->is_verified == true ? 'class=active' : 'class=inactive') : 'class=inactive' }}> {{ isset($user->customer) ? ($user->customer->is_verified == true ? 'Verified' : 'Not Verified') : 'Not Verified' }} </span></p>
                                     </td>
                                     <td>
-                                
+                                        {{ ($user->UserSubscriptions->first()) ? 
+                                                $user->UserSubscriptions->first()->scheme->title : '' }}
                                     </td>
-                                    <td>{{ $user->email }}</td>
                                     <td>{{ isset($user->customer) ? $user->customer->mobile : '' }}</td>
                                     <td>
                                         <div class="progress mt-1 w-100">
@@ -162,6 +162,7 @@ use App\Services\UserService;
                                             </div>
                                         </div>
                                     </td>
+                                    <td>{{ date('d/m/Y', strtotime($user->created_at)) }}</td>
                                     <td id="status{{ $user->id }}">
                                         <span
                                             {{ isset($user->customer) ? 
@@ -188,6 +189,12 @@ use App\Services\UserService;
                                 @endforeach
 
                             </tbody>
+
+                            <tfoot>
+                                <tr>
+                                    <td colspan="8">{{ $users->links() }}</td>
+                                </tr>
+                            </tfoot>
 
                         </table>
                         <!-- End Table with stripped rows -->

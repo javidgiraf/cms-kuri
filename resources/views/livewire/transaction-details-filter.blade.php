@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-body">
 
-                    <h5 class="card-title">Manage Transaction details
+                    <h5 class="card-title">Manage Transaction Details
 
                     </h5>
                     @include('layouts.partials.messages')
@@ -109,7 +109,7 @@
 
             </div>
             <div style="overflow-x:auto;">
-                <table class="table table-striped" style="width: 140%;">
+                <table class="table table-striped" style="width: 120%;">
                     {{-- <div style='text-align: end' ;><a href="{{route('districts.create')}}" class="btn btn-primary"><i class="bi bi-align-middle"></i><span>Add District</span></a>
             </div> --}}
 
@@ -117,17 +117,15 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">User</th>
-                    <th scope="col">Order</th>
+                    <th scope="col">Transaction No</th>
                     <th scope="col">Date</th>
                     <th scope="col">Scheme</th>
-                    <th scope="col">Total Scheme Amount</th>
-                    <th scope="col">Service Charge</th>
-                    <th scope="col">GST Charge</th>
+                    <th scope="col">Total Amount</th>
+                
                     <th scope="col">Final Amount</th>
                     <th scope="col">User Type</th>
                     <th scope="col">Payment Type</th>
 
-                    <th scope="col" class="fixed-left">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -137,40 +135,25 @@
                 <tr>
                     <th scope="row">{{ $transactionDetails->firstitem() + $loop->index }}</th>
                     <td>{{ $transactionDetail->deposit?->subscription?->user->name }}</td>
-                    <td>{{ $transactionDetail->deposit?->order_id }}</td>
-                    <td>{{ date('d-m-Y', strtotime($transactionDetail->deposit?->paid_at)) }}</td>
+                    <td>
+                        
+                        <a data-bs-toggle="modal" class="model" data-bs-target="#ExtralargeModal" style="color:blue; cursor: pointer; text-decoration: underline;" order_id="{{encrypt($transactionDetail->deposit_id)}}">
+                            {{ $transactionDetail->deposit?->order_id }}
+                        </a>
+                    </td>
+                    <td>{{ date('d/m/Y', strtotime($transactionDetail->deposit?->paid_at)) }}</td>
                     <td>{{ $transactionDetail->deposit?->subscription?->scheme?->title }}</td>
 
                     <td>
                         {{ \App\Models\Setting::CURRENCY }} {{ number_format($transactionDetail->deposit?->total_scheme_amount, 2) }}
                     </td>
-                    <td>{{ \App\Models\Setting::CURRENCY }} {{ number_format($transactionDetail->deposit?->service_charge, 2) }}</td>
-                    <td>{{ \App\Models\Setting::CURRENCY }} {{ number_format($transactionDetail->deposit?->gst_charge, 2) }}</td>
+                
                     <td>
                         {{ \App\Models\Setting::CURRENCY }} {{ number_format($transactionDetail->deposit?->final_amount, 2) }}
                     </td>
                     <td>{{ $transactionDetail->deposit?->user_type == 'admin' ? 'Admin' : 'Customer' }}</td>
                     <td>{{ $transactionDetail->deposit?->payment_type }}</td>
-
-
-
-
-
-
-                    <td class="fixed-left">
-                        <a data-bs-toggle="modal" class="model" data-bs-target="#ExtralargeModal" style="color:blue" order_id="{{encrypt($transactionDetail->deposit_id)}}">
-                            <i class="bi bi-eye"></i>
-                        </a>
-
-                        {{-- <a href="{{route('users.edit-scheme-details',[encrypt($userSubscription->id),encrypt($userSubscription->user->id),encrypt($userSubscription->scheme->id)])}}" style="margin-right: 10px;"><i class="bi bi-pencil-square"></i></a> --}}
-                        {{-- <a href="javascript:void(0);" onclick="event.preventDefault();
-                                                document.getElementById('delete-form-{{ $district->id }}').submit();"><i class="bi bi-x-circle"></i></a> --}}
-                    </td>
-
-                    {{-- <form method="post" action="{{route('districts.destroy', encrypt($district->id))}}" style="display:none" id="delete-form-{{$district->id}}">
-                    @csrf
-                    @method('DELETE')
-                    </form> --}}
+                    
 
                 </tr>
                 @endif

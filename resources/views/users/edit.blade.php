@@ -69,12 +69,12 @@
 
 <main id="main" class="main">
   <div class="pagetitle">
-    <h1>User</h1>
+    <h1>Customer</h1>
     <nav>
       <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="{{route('home')}}">Home</a></li>
-        <li class="breadcrumb-item"><a href="{{route('users.index')}}">Users</a></li>
-        <li class="breadcrumb-item active">Update User</li>
+        <li class="breadcrumb-item"><a href="{{route('users.index')}}">Customers</a></li>
+        <li class="breadcrumb-item active">Update Customer</li>
       </ol>
     </nav>
   </div><!-- End Page Title -->
@@ -84,7 +84,7 @@
 
         <div class="card">
           <div class="card-title d-flex justify-content-between m-3 mt-0">
-            <h5><strong>Update</strong> User</h5>
+            <h5><strong>Update</strong> Customer</h5>
             <a href="{{route('users.index')}}" class="btn btn-primary"><i class="zmdi zmdi-arrow-left" style="padding-right: 6px;"></i><span class="text-white">Back</span></a>
           </div>
           <div class="card-body">
@@ -105,7 +105,7 @@
                 </div>
               </div>
               <div class="row mb-3">
-                <label for="inputText" class="col-sm-3 col-form-label">Email <span class="text-danger">*</span></label>
+                <label for="inputText" class="col-sm-3 col-form-label">Email</label>
                 <div class="col-sm-9">
                   <input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $user->email) }}" placeholder="Enter Email" autocomplete="one-time-code">
                   @error('email')

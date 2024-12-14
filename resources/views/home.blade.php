@@ -148,7 +148,7 @@
                         <div class="card recent-sales overflow-auto">
 
                             <div class="card-body">
-                                <h5 class="card-title">Upcoming Payments</h5>
+                                <h5 class="card-title">Latest Payments</h5>
 
                                 <table class="table table-borderless">
                                     <thead>
@@ -178,40 +178,7 @@
                         </div>
                     </div><!-- End Upcoming Payments -->
 
-                    <!-- Old Payments -->
-                    <div class="col-12">
-                        <div class="card recent-sales overflow-auto">
-
-                            <div class="card-body">
-                                <h5 class="card-title">Old Payments</h5>
-
-                                <table class="table table-borderless">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">#</th>
-                                            <th scope="col">Customer</th>
-                                            <th scope="col">Scheme</th>
-                                            <th scope="col">Date</th>
-                                            <th scope="col">Amount</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($oldestPayments as $oldestPayment)
-                                        <tr>
-                                            <th scope="row">{{ $loop->iteration }}</th>
-                                            <td>{{ $oldestPayment->userSubscription->user->name }}</td>
-                                            <td>{{ $oldestPayment->userSubscription->scheme->title }}</td>
-                                            <td>{{ date('d/m/Y', strtotime($oldestPayment->paid_at)) }}</td>
-                                            <td>{{ \App\Models\Setting::CURRENCY }} {{ number_format($oldestPayment->total_scheme_amount, 2) }}</td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-
-                            </div>
-
-                        </div>
-                    </div><!-- End Old -->
+                    
                 </div>
             </div><!-- End Left side columns -->
 
@@ -283,7 +250,7 @@
                                         left: 'center'
                                     },
                                     series: [{
-                                        name: 'Scheme Amounts',
+                                        name: 'Total Amount Received',
                                         type: 'pie',
                                         radius: ['40%', '70%'],
                                         avoidLabelOverlap: false,

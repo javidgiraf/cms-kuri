@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-body">
 
-                    <h5 class="card-title">Manage Users Subscriptions</h5>
+                    <h5 class="card-title">Manage Customer Subscriptions</h5>
                     @include('layouts.partials.messages')
                     <!-- Table with stripped rows -->
 
@@ -34,7 +34,7 @@
                         <div class="col-md-3">
                             <div wire:ignore>
                                 <select wire:model="user_id" class="form-control" wire:change="user_table_filer" id="user_id">
-                                    <option value="">Select User</option>
+                                    <option value="">Select Customer</option>
                                     @foreach($users as $user)
                                     <option <?= request('user_id') == $user->id ? 'selected' : '' ?> value="{{$user->id}}">{{$user->name}}</option>
                                     @endforeach
@@ -83,21 +83,19 @@
                         <div class=" col-md-3">
                             <input type="date" wire:model="to_date" class="date form-control" id="to_date" wire:change="date_id_filer">
                         </div>
-                        
+
                         <div class="col-md-3">
                             <button wire:click="resetOnClick" class="btn btn-primary" id="reset">Reset</button>
-                        </div>
 
-                        @can(['subscriptionsExport'])
-                        <div class="col-md-3">
+                            @can(['subscriptionsExport'])
                             <a class="btn btn-success btnExport" onclick="updateExportUrl();">Export To Excel</a>
+                            @endcan
                         </div>
-                        @endcan
                     </div>
 
-                   
+
                     <div style="overflow-x:auto;">
-                        <table class="table table-striped" style="width: 120%;">
+                        <table class="table table-striped" style="width: 110%;" id="subscriptionsTable">
                             {{-- <div style='text-align: end' ;><a href="{{route('districts.create')}}" class="btn btn-primary"><i class="bi bi-align-middle"></i><span>Add District</span></a>
                     </div> --}}
 
@@ -106,16 +104,16 @@
                             <th scope="col">#</th>
                             <th scope="col" width="10%">User</th>
                             <th scope="col">Scheme</th>
-                            <th scope="col">Scheme Amount</th>
-                            <th scope="col">Collected Amount</th>
-                            <th scope="col">State Date</th>
-                            <th scope="col">End Date</th>
+                            <th scope="col">Amount</th>
+                            <th scope="col">Collected</th>
+                            <th scope="col">Date Period</th>
                             <th scope="col">Closing Status</th>
                             <th scope="col">Status</th>
-                            <th scope="col" class="fixed-left">Action</th>
+                            <th scope="col" class="fixed-left"></th>
                         </tr>
                     </thead>
                     <tbody>
+                        @if(count($userSubscriptions) > 0)
                         @foreach($userSubscriptions as $userSubscription)
                         <tr>
                             <th scope="row">{{ $userSubscriptions->firstitem() + $loop->index }}</th>
@@ -132,37 +130,68 @@
                                 @endforeach
                                 {{ \App\Models\Setting::CURRENCY }} {{ number_format($totalAmount, 2) }}
                             </td>
-                            <td>{{date('d-m-Y', strtotime($userSubscription->start_date))}}</td>
-                            <td>{{date('d-m-Y', strtotime($userSubscription->end_date))}}</td>
-                            <td>{{$userSubscription->is_closed=='0'?"Open":"Closed"}}</td>
-                            @if($userSubscription->status=='1')
-                            <td>Active</td>
-                            @elseif($userSubscription->status=='2')
-                            <td>Discontinued</td>
-                            @elseif($userSubscription->status=='3')
-                            <td>On Hold</td>
-                            @else
-                            <td>De Active</td>
-                            @endif
+                            <td>
+                                {{ date('d/m/Y', strtotime($userSubscription->start_date)) }}
+                                -
+                                {{ date('d/m/Y', strtotime($userSubscription->end_date)) }}
+                            </td>
+
+                            <?php
+
+                            $status = NULL;
+                            switch ($userSubscription->status) {
+                                case $userSubscription::STATUS_ACTIVE:
+                                    $status = '<span class="active activeStatus">Active</span>';
+                                    break;
+                                case $userSubscription::STATUS_DISCONTINUE:
+                                    $status = '<span class="badge bg-secondary discontinueStatus p-2" style="border-radius: 0;">Discontinued</span>';
+                                    break;
+                                case $userSubscription::STATUS_ONHOLD:
+                                    $status = '<span class="badge bg-warning onHoldStatus p-2" style="border-radius: 0;">On Hold</span>';
+                                    break;
+                                case $userSubscription::STATUS_INACTIVE:
+                                    $status = '<span class="inactive inActiveStatus">In Active</span>';
+                                    break;
+                            }
+
+                            ?>
+
+                            <td>
+                                <a data-subscription-id="{{ $userSubscription->id }}"
+                                   data-maturity-status="{{ $userSubscription->is_closed }}"
+                                   data-bs-toggle="modal" data-bs-target="#changeMaturityStatusModal"
+                                   style="cursor: pointer;" class="changeMaturityStatusBtn">
+                                    <span data-subscription-id="{{ $userSubscription->id }}" data-maturity-status="{{ $userSubscription->is_closed }}" class="<?= $userSubscription->is_closed == '0' ? 'badge bg-primary' : "badge bg-danger" ?>">
+                                        {{ $userSubscription->is_closed == '0' ? "Open" : "Closed" }}
+                                    </span>
+                                </a>
+                            </td>
+
+                            <td><a 
+                                    data-subscription-id="{{ $userSubscription->id }}" 
+                                    data-status="{{ $userSubscription->status }}" 
+                                    data-reason="{{ $userSubscription->reason }}" 
+                                    data-final-amount="{{ ($userSubscription->discontinue) ? $userSubscription->discontinue->final_amount : 0 }}"
+                                    data-settlement-amount="{{ ($userSubscription->discontinue) ? $userSubscription->discontinue->settlement_amount : 0 }}"
+                                    data-bs-toggle="modal" data-bs-target="#changeStatusModal" style="cursor: pointer;" class="changeStatusBtn">{!! $status !!}</a></td>
+
 
 
                             <td class="fixed-left">
-                                {{--<a data-bs-toggle="modal" class="model" data-bs-target="#ExtralargeModal" style="color:blue" id="{{encrypt($userSubscription->id)}}" user_id="{{encrypt($userSubscription->user?->id)}}" scheme_id="{{encrypt($userSubscription->scheme?->id)}}">
-                                <i class="bi bi-eye"></i>
-                                </a>--}}
-
-                                <a href="{{route('users.edit-scheme-details',[encrypt($userSubscription->id),encrypt($userSubscription->user?->id),encrypt($userSubscription->scheme?->id)])}}" style="margin-right: 10px;"><i class="bi bi-pencil-square"></i></a>
-                                {{-- <a href="javascript:void(0);" onclick="event.preventDefault();
-                                                document.getElementById('delete-form-{{ $district->id }}').submit();"><i class="bi bi-x-circle"></i></a> --}}
+                                <a href="{{route('users.edit-scheme-details',[encrypt($userSubscription->id),encrypt($userSubscription->user?->id),encrypt($userSubscription->scheme?->id)])}}" style="margin-right: 10px;">
+                                    <i class="bi bi-eye"></i>
+                                </a>
                             </td>
 
-                            {{-- <form method="post" action="{{route('districts.destroy', encrypt($district->id))}}" style="display:none" id="delete-form-{{$district->id}}">
-                            @csrf
-                            @method('DELETE')
-                            </form> --}}
+
 
                         </tr>
                         @endforeach
+                        @else
+                        <tr>
+                            <td colspan="9">No Records available in table</td>
+                        </tr>
+                        @endif
                         <div class="modal fade" id="ExtralargeModal" tabindex="-1">
                             <div class="modal-dialog modal-xl fetch-list">
 
@@ -170,9 +199,13 @@
                             </div>
                         </div>
                     </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="9">{{ $userSubscriptions->links() }}</td>
+                        </tr>
+                    </tfoot>
                     </table>
 
-                    {{ $userSubscriptions->links() }}
                 </div>
                 <!-- End Table with stripped rows -->
 
@@ -187,7 +220,87 @@
 
     </div>
     </div>
+
+    <div class="modal fade" id="changeStatusModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Change Subscription Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Status <span class="text-danger">*</span></label>
+                        <select class="form-control mt-1" id="subscription_status" name="subscription_status" style="width: 100%;">
+                            <option value="">Select Status</option>
+                            <option value="<?= \App\Models\UserSubscription::STATUS_ACTIVE ?>">Active</option>
+                            <option value="<?= \App\Models\UserSubscription::STATUS_DISCONTINUE ?>">Discontinue</option>
+                            <option value="<?= \App\Models\UserSubscription::STATUS_ONHOLD ?>">On Hold</option>
+                            <option value="<?= \App\Models\UserSubscription::STATUS_INACTIVE ?>">In Active</option>
+                        </select>
+                        <span class="subscriptionStatusError"></span>
+                    </div>
+                    <div class="d-none" id="discontinue-details">
+                        <h6 class="mt-3"><b>Discontinue Details</b></h6>
+                    
+                            <div class="form-group mt-2">
+                                <label>Final Amount</label>
+                                <input type="text" id="final_amount" name="final_amount" class="form-control mt-1" placeholder="Final Amount">
+                            </div>
+                            <div class="form-group mt-2">
+                                <label>Settlement Amount</label>
+                                <input type="text" id="settlement_amount" name="settlement_amount" class="form-control mt-1" placeholder="Settlement Amount">
+                            </div>
+                        
+                        
+                    </div>
+                    <div class="form-group mt-2">
+                        <label>Reason</label>
+                        <textarea name="reason" id="reason" class="form-control mt-1"></textarea>
+                    </div>
+                    <input type="hidden" id="subscription_id" name="subscription_id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary updateBtn">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="changeMaturityStatusModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Change Maturity Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Maturity Status <span class="text-danger">*</span></label>
+                        <select class="form-control mt-1" id="maturity_status" name="maturity_status" style="width: 100%;">
+                            <option value="">Select Maturity Status</option>
+                            <option value="1">Close the Subscription</option>
+                        </select>
+                        <span class="maturityStatusError"></span>
+                    </div>
+
+                    <div class="form-group mt-2">
+                        <label>Reason</label>
+                        <textarea name="maturity_reason" id="maturity_reason" class="form-control mt-1"></textarea>
+                    </div>
+                    <input type="hidden" id="maturity_subscription_id" name="maturity_subscription_id">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary updateMaturityBtn">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </section>
+
+
 @push('scripts')
 <script>
     let baseUrl = "{{ route('users.get-user-subscriptions') }}";
@@ -259,6 +372,123 @@
 
                 $('.fetch-list').html(response.data);
 
+            }
+        });
+    });
+
+    $(document).on('change', '#subscription_status', function(){
+        if($(this).val() == <?= \App\Models\UserSubscription::STATUS_DISCONTINUE ?>) {
+            $("#discontinue-details").removeClass('d-none');
+        }
+        else {
+            $("#discontinue-details").addClass('d-none');
+        }
+    });
+
+    $(document).on('click', '.changeStatusBtn', function() {
+        let subscription_id = $(this).data('subscription-id');
+        let status = $(this).data('status');
+        let reason = $(this).data('reason');
+        let final_amount = $(this).data('final-amount');
+        let settlement_amount = $(this).data('settlement-amount');
+
+        $("#subscription_id").val(subscription_id);
+        $("#subscription_status").val(status).trigger('change');
+        $("#reason").val(reason);
+        $("#final_amount").val(final_amount);
+        $("#settlement_amount").val(settlement_amount);
+    });
+
+    $("#changeStatusModal").on('click', '.updateBtn', function(e) {
+
+        $(".is-invalid").removeClass('is-invalid');
+        $(".invalid-feedback").removeClass('invalid-feedback').text("");
+
+        var subscription_id = $("#subscription_id").val();
+        var status = $('#subscription_status').val();
+        var final_amount = $("#final_amount").val();
+        var settlement_amount = $("#settlement_amount").val();
+        var reason = $('#reason').val();
+
+        $.ajax({
+            url: "{{ route('change-subscription-status') }}", // URL to your Laravel route
+            type: 'POST',
+            data: {
+                subscription_id: subscription_id,
+                scheme_status: status,
+                final_amount: final_amount,
+                settlement_amount: settlement_amount,
+                reason: reason,
+                _token: "{{ csrf_token() }}"
+            },
+            dataType: 'json',
+            success: function(response) {
+                $("#changeStatusModal").modal('hide');
+                toastr.success(response.message);
+
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            },
+            error: function(error) {
+                if (error.responseJSON.errors.scheme_status) {
+                    $("#subscription_status").addClass('is-invalid');
+                    $('.subscriptionStatusError').addClass('invalid-feedback')
+                        .text(error.responseJSON.errors.scheme_status[0]);
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '.changeMaturityStatusBtn', function() {
+        let maturity_subscription_id = $(this).data('subscription-id');
+        let maturity_status = $(this).data('maturity-status'); 
+        $("#maturity_subscription_id").val(maturity_subscription_id);
+        if(maturity_status == 1) {
+            $("#maturity_status").val(maturity_status).trigger('change');
+        }
+        else {
+            $("#maturity_status").val("").trigger('change');
+        }
+    });
+
+    $("#changeMaturityStatusModal").on('click', '.updateMaturityBtn', function(e) {
+        e.preventDefault();
+
+        $("#maturity_status").removeClass('is-invalid');
+        $(".maturityStatusError").removeClass('invalid-feedback').text("");
+
+        var maturity_subscription_id = $("#maturity_subscription_id").val();
+        var maturity_status = $("#maturity_status").val();
+        var maturity_reason = $("#maturity_reason").val();
+
+        console.log("Subscription ID:", maturity_subscription_id); // Debugging to ensure correct value
+        console.log("Maturity Status:", maturity_status);
+        console.log("Maturity Reason:", maturity_reason);
+
+        $.ajax({
+            url: "{{ route('change-maturity-status') }}",
+            type: 'POST',
+            data: {
+                subscription_id: maturity_subscription_id,
+                maturity_status: maturity_status,
+                maturity_reason: maturity_reason,
+                _token: "{{ csrf_token() }}"
+            },
+            dataType: 'json',
+            success: function(response) {
+                $("#changeMaturityStatusModal").modal('hide');
+                toastr.success(response.message);
+
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            },
+            error: function(error) {
+                if (error.responseJSON.errors.maturity_status) {
+                    $("#maturity_status").addClass('is-invalid');
+                    $(".maturityStatusError").addClass('invalid-feedback').text(error.responseJSON.errors.maturity_status[0]);
+                }
             }
         });
     });

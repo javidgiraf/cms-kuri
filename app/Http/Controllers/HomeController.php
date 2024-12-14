@@ -35,13 +35,9 @@ class HomeController extends Controller
         $activeUsersCount = User::whereHas('customer', function ($query) {
             $query->where('status', true);
         })->where('is_admin', false)->count();
-        $schemesCount = Scheme::all()->count();
+        $schemesCount = Scheme::where('status', true)->count();
 
         $latestPayments = Deposit::with('userSubscription')->latest()->take(5)->get();
-        $oldestPayments = Deposit::with('userSubscription')
-            ->orderBy('created_at', 'asc')
-            ->take(5)
-            ->get();
 
         $schemes = [];
         Scheme::all()->each(function ($scheme) use (&$schemes) {
@@ -64,7 +60,6 @@ class HomeController extends Controller
             'activeUsersCount' => $activeUsersCount,
             'schemesCount' => $schemesCount,
             'latestPayments' => $latestPayments,
-            'oldestPayments' => $oldestPayments,
             'schemes' => $schemes
         ]);
     }

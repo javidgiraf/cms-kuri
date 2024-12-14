@@ -25,7 +25,7 @@ class UserCreatePostRequest extends FormRequest
     {
         $rules = [
             'name' => ['required'],
-            'email' => ['required', 'email', Rule::unique('users', 'email')],
+            'email' => ['nullable', 'email', Rule::unique('users', 'email')],
             'referrel_code' => ['required', Rule::unique('customers', 'referrel_code')],
             'mobile' => ['required', 'min:10', 'max:15', 'regex:/^[6-9]\d{9}$/', Rule::unique('customers', 'mobile')],
             'scheme_id' => ['required', Rule::exists('schemes','id')],

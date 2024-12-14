@@ -97,11 +97,11 @@ use App\Services\UserService;
         }
     </style>
     <div class="pagetitle">
-        <h1>Admins</h1>
+        <h1>{{ __('Admins') }}</h1>
         <nav>
             <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
-                <li class="breadcrumb-item active">Admins</li>
+                <li class="breadcrumb-item"><a href="{{ route('home') }}">{{ __('Home') }}</a></li>
+                <li class="breadcrumb-item active">{{ __('Admins') }}</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->
@@ -114,7 +114,7 @@ use App\Services\UserService;
 
                 <div class="card">
                     <div class="card-title d-flex justify-content-between m-3 mt-0">
-                        <h5><b>Manage Admins</b></h5>
+                        <h5><b>{{ __('Manage Admins') }}</b></h5>
                         <a href="{{route('admins.create')}}" class="btn btn-primary"><i class="bi bi-align-middle"></i> <span class="text-white">Create Admin</span></a>
                     </div>
                     <div class="card-body table-responsive">
@@ -128,7 +128,8 @@ use App\Services\UserService;
                                     <th scope="col">#</th>
                                     <th scope="col">Name</th>
                                     <th scope="col">Email</th>
-                                    <th scope="col">Action</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col"></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -139,7 +140,12 @@ use App\Services\UserService;
                                     <td>{{ $admin->name }}</td>
                                     <td>{{ $admin->email }}</td>
                 
-
+                                    <td><span
+                                            {{ $admin->is_admin == true ?  
+                                                    'class=active' : 'class=inactive' }}>
+                                            {{ ($admin->is_admin == true) ?  
+                                                        'Active' : 'Not Active' }}
+                                        </span></td>
                                     <td>
                                         <a href="{{ route('admins.edit', encrypt($admin->id)) }}" style="margin-right: 10px;"><i class="bi bi-pencil-square"></i></a>
                                         @role('superadmin')

@@ -17,11 +17,11 @@
         }
     </style>
     <div class="pagetitle">
-        <h1>Users Subscriptions</h1>
+        <h1>Customer Subscriptions</h1>
         <nav>
             <ol class="breadcrumb">
                 <li class="breadcrumb-item"><a href="{{route('home')}}">Home</a></li>
-                <li class="breadcrumb-item active">Users Subscriptions</li>
+                <li class="breadcrumb-item active">Customer Subscriptions</li>
             </ol>
         </nav>
     </div><!-- End Page Title -->

@@ -30,6 +30,7 @@ class UserSubscription extends Model
     {
         return $this->hasOne(User::class, 'id', 'user_id');
     }
+    
     public function scheme()
     {
         return $this->hasOne(Scheme::class, 'id', 'scheme_id');
@@ -43,5 +44,10 @@ class UserSubscription extends Model
     public function schemeSetting()
     {
         return $this->hasOne(SchemeSetting::class, 'scheme_id', 'scheme_id');
+    }
+
+    public function discontinue()
+    {
+        return $this->hasOne(Discontinue::class, 'subscription_id', 'id');
     }
 }
