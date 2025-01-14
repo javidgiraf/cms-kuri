@@ -33,7 +33,7 @@ class UserService
         $users =
             User::whereHas('roles', function ($query) {
                 $query->whereName('customer');
-            })->with('roles', 'customer', 'UserSubscriptions')->latest()->paginate($perPage);
+            })->whereIsAdmin(false)->with('roles', 'customer', 'UserSubscriptions')->latest()->paginate($perPage);
         return  $users;
     }
 

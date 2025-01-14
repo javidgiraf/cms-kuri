@@ -39,20 +39,28 @@ class Scheme extends Model
 
     public function setPdfFileAttribute($file)
     {
-        if (isset($this->attributes['pdf_file']) && $this->attributes['pdf_file']) {
-            $existingFilePath = 'schemes/' . $this->attributes['pdf_file'];
+        if (!$file) {
+            $this->attributes['pdf_file'] = null;
+            return;
+        }
 
+        // Delete the existing file if it exists
+        if (!empty($this->attributes['pdf_file'])) {
+            $existingFilePath = 'schemes/' . $this->attributes['pdf_file'];
             if (Storage::disk('public')->exists($existingFilePath)) {
                 Storage::disk('public')->delete($existingFilePath);
             }
         }
+
+        // Store the new file
         $fileName = time() . '_' . $file->getClientOriginalName();
         $file->storeAs('schemes', $fileName, 'public');
         $this->attributes['pdf_file'] = $fileName;
     }
 
+
     public function getPdfFileAttribute()
     {
-        return asset('storage/schemes/'. $this->attributes['pdf_file']);
+        return asset('storage/schemes/' . $this->attributes['pdf_file']);
     }
 }

@@ -89,13 +89,13 @@
                                     @enderror
                                 </div>
                                 <div class="col-sm-3">
-                                    <input type="text" id="start_from" name="start_from" class="form-control @error('start_from') is-invalid @enderror" value="{{ old('start_from') }}" placeholder="Start From">
+                                    <input type="text" id="start_from" name="start_from" class="form-control @error('start_from') is-invalid @enderror" value="{{ old('start_from', $schemeSetting->start_from) }}" placeholder="Start From">
                                     @error('start_from')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                                 <div class="col-sm-3">
-                                    <input type="text" id="end_to" name="end_to" class="form-control @error('end_to') is-invalid @enderror" value="{{ old('end_to') }}" placeholder="End To">
+                                    <input type="text" id="end_to" name="end_to" class="form-control @error('end_to') is-invalid @enderror" value="{{ old('end_to', $schemeSetting->end_to) }}" placeholder="End To">
                                     @error('end_to')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
