@@ -14,7 +14,7 @@ class LogActivityController extends Controller
     {
         //
         $logactivities = $logActivityService->getlogActivities();
-  //
+        //
 
         return view('logactivities.index', compact('logactivities'));
     }

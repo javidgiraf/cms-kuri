@@ -59,7 +59,7 @@ class UserController extends Controller
     {
         $input = $request->all();
         (isset($input['status']) && $input['status']) ? $input['status'] = 1 : $input['status'] = 0;
- 
+
         $user = $userService->createUser($input);
         $input['user_id'] = $user->id;
         $userService->addUsertoScheme($input);
@@ -84,13 +84,15 @@ class UserController extends Controller
         $success_deposit_lists = $userService->getSuccessDepositList($user_subscription_id, $user_id, $scheme_id);
         $failed_processing_deposit_lists = $userService->getFailedDepositList($user_subscription_id, $user_id, $scheme_id);
 
-        return view('users.show', 
+        return view(
+            'users.show',
             compact(
-                'current_plan_history', 
-                'user_subscription_id', 
-                'user_id', 'scheme_id', 
-                'success_deposit_lists', 
-                'failed_processing_deposit_lists', 
+                'current_plan_history',
+                'user_subscription_id',
+                'user_id',
+                'scheme_id',
+                'success_deposit_lists',
+                'failed_processing_deposit_lists',
                 'userSubscription',
                 'currency'
             )
@@ -152,7 +154,7 @@ class UserController extends Controller
         $data2 =  view('partials._user_subscription_list')
             ->with(compact('userSubscriptionLists'))
             ->render();
-         return response()->json(['data' => $data2]);
+        return response()->json(['data' => $data2]);
     }
 
     public function currentPlanHistory(Request $request, UserService $userService)
@@ -264,12 +266,12 @@ class UserController extends Controller
         $receipt_upload = $userService->uploadImage($request);
         $userService->saveTransactionHistory($input, $receipt_upload);
         $userService->saveBankTransfers($input, $receipt_upload);
-        
+
         return response()->json(['data' => '1']);
         //  return redirect()->route('users.index')->with('success', 'Deposit Paid successfully');
     }
-    
-    
+
+
     public function saveTransactionDetails(TransactionPostRequest $request, UserService $userService)
     {
         $input = $request->all();
@@ -330,7 +332,7 @@ class UserController extends Controller
         $data2 =  view('partials._success_deposit_order_by_id_details')
             ->with(compact('success_deposit_by_order'))
             ->render();
-            
+
         return response()->json(['data' => $data2]);
     }
 
@@ -391,7 +393,7 @@ class UserController extends Controller
     public function userSubscriptions()
     {
         $userSubscriptions = UserSubscription::with('user', 'scheme')->get();
-        
+
         return view('subscriptions.index', compact('userSubscriptions'));
     }
 
@@ -442,9 +444,9 @@ class UserController extends Controller
             'scheme_status' => ['required']
         ]);
 
-        if($validator->fails()) {
+        if ($validator->fails()) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -459,9 +461,8 @@ class UserController extends Controller
                 'status' => $inputs['scheme_status'],
                 'description' => $inputs['reason']
             ]);
-        
-        if($inputs['scheme_status'] == UserSubscription::STATUS_DISCONTINUE)
-        {
+
+        if ($inputs['scheme_status'] == UserSubscription::STATUS_DISCONTINUE) {
             Discontinue::updateOrCreate(
                 [
                     'subscription_id' => $userSubscription->id
@@ -476,7 +477,7 @@ class UserController extends Controller
             );
         }
 
-        return response()->json(['success' => true, 'message' => 'Status changed successfully', 'data' => $userSubscription]);    
+        return response()->json(['success' => true, 'message' => 'Status changed successfully', 'data' => $userSubscription]);
     }
 
     public function changeMaturityStatus(Request $request)
@@ -486,9 +487,9 @@ class UserController extends Controller
             'maturity_status' => ['required']
         ]);
 
-        if($validator->fails()) {
+        if ($validator->fails()) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'errors' => $validator->errors()
             ], 422);
         }
@@ -504,61 +505,60 @@ class UserController extends Controller
                 'description' => $inputs['maturity_reason']
             ]);
 
-        return response()->json(['success' => true, 'message' => 'Maturity Status changed successfully', 'data' => $userSubscription]);    
+        return response()->json(['success' => true, 'message' => 'Maturity Status changed successfully', 'data' => $userSubscription]);
     }
-    
+
     public function changeScheme(Request $request)
-{
-    $inputs = $request->all();
+    {
+        $inputs = $request->all();
 
-    // Validate the inputs
-    $validator = Validator::make($inputs, [
-        
-        'scheme' => ['required', Rule::exists('schemes', 'id')], // Validate scheme ID
-        'start_date' => ['required', 'date'], 
-        'subscribe_amount' => ['nullable', 'numeric'] 
-    ]);
+        // Validate the inputs
+        $validator = Validator::make($inputs, [
 
-    // Return validation errors if validation fails
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'errors' => $validator->errors()
-        ], 422);
-    }
-
-    try {
-        // Find the scheme
-        $scheme = Scheme::findOrFail($inputs['scheme']);
-        $total_period = $scheme->total_period;
-
-        // Parse and validate the start_date
-        $start_date = Carbon::parse($inputs['start_date']);
-        $end_date = $start_date->copy()->addMonths($total_period - 1);
-
-        // Update the user subscription
-        $userSubscription = UserSubscription::findOrFail($inputs['sub_id']);
-        $userSubscription->update([
-            'subscribe_amount' => $inputs['subscribe_amount'] ?? 0,
-            'scheme_id' => $inputs['scheme'],
-            'start_date' => $start_date->format('Y-m-d'),
-            'end_date' => $end_date->format('Y-m-d'),
-            'status' => true, // Ensure status is active
-            'is_closed' => false // Ensure the scheme is not closed
+            'scheme' => ['required', Rule::exists('schemes', 'id')], // Validate scheme ID
+            'start_date' => ['required', 'date'],
+            'subscribe_amount' => ['nullable', 'numeric']
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Scheme Changed Successfully'
-        ]);
-    } catch (\Exception $e) {
-        // Handle any unexpected errors
-        return response()->json([
-            'success' => false,
-            'message' => 'An error occurred while changing the scheme.',
-            'error' => $e->getMessage()
-        ], 500);
-    }
-}
+        // Return validation errors if validation fails
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
+        }
 
+        try {
+            // Find the scheme
+            $scheme = Scheme::findOrFail($inputs['scheme']);
+            $total_period = $scheme->total_period;
+
+            // Parse and validate the start_date
+            $start_date = Carbon::parse($inputs['start_date']);
+            $end_date = $start_date->copy()->addMonths($total_period - 1);
+
+            // Update the user subscription
+            $userSubscription = UserSubscription::findOrFail($inputs['sub_id']);
+            $userSubscription->update([
+                'subscribe_amount' => $inputs['subscribe_amount'] ?? 0,
+                'scheme_id' => $inputs['scheme'],
+                'start_date' => $start_date->format('Y-m-d'),
+                'end_date' => $end_date->format('Y-m-d'),
+                'status' => true, // Ensure status is active
+                'is_closed' => false // Ensure the scheme is not closed
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Scheme Changed Successfully'
+            ]);
+        } catch (\Exception $e) {
+            // Handle any unexpected errors
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while changing the scheme.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

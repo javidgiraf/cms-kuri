@@ -52,10 +52,10 @@ class UserService
         $users =
             User::whereHas('roles', function ($query) {
                 $query->whereName('customer');
-            })->with('roles')->with('customer')->whereHas('UserSubscriptions', function($query){
-                    $query->where('is_closed', false);
+            })->with('roles')->with('customer')->whereHas('UserSubscriptions', function ($query) {
+                $query->where('is_closed', false);
             })->get();
-            
+
         return  $users;
     }
 
@@ -214,17 +214,17 @@ class UserService
         $due_months = array_map(function ($date) {
             return Carbon::parse($date)->format('Y-m'); // Format as "YYYY-MM"
         }, $due_dates);
-        
+
         // Filter $result_dates to exclude dates with the same month as $due_dates
         $filtered_dates = array_filter($result_dates, function ($date) use ($due_months) {
             $result_month = Carbon::parse($date)->format('Y-m'); // Format as "YYYY-MM"
             return !in_array($result_month, $due_months);
         });
-        
+
         // Convert filtered dates to a plain array and re-index
         $filtered_dates = array_values($filtered_dates);
-       
-        
+
+
         $rs_dates = [];
         foreach ($filtered_dates as &$d) {
             $rs_dates[] = [
@@ -347,120 +347,120 @@ class UserService
             'subscribe_amount' => $user_subscription->subscribe_amount
         ];
     }
-    
 
-   public function payDeposit(array $userData): Deposit
-{
-    // Generate a unique order ID
-    $order_id = UniqueHelper::UniqueID();
-    $service_charge = '0.00';
-    $gst_charge = '0.00';
-    $total_scheme_amount = $userData['totalAmount'];
-    $final_amount = $total_scheme_amount + $service_charge + $gst_charge;
 
-    $user_id = auth()->user()->id;
+    public function payDeposit(array $userData): Deposit
+    {
+        // Generate a unique order ID
+        $order_id = UniqueHelper::UniqueID();
+        $service_charge = '0.00';
+        $gst_charge = '0.00';
+        $total_scheme_amount = $userData['totalAmount'];
+        $final_amount = $total_scheme_amount + $service_charge + $gst_charge;
 
-    // Fetch user subscription with required relationships
-    $user_subscription = UserSubscription::with([
-        'deposits.deposit_periods',
-        'scheme.schemeType',
-        'schemeSetting'
-    ])->findOrFail($userData['subscription_id']);
+        $user_id = auth()->user()->id;
 
-    // Get flexibility duration from the scheme
-    $flexibility_duration = $user_subscription->scheme->schemeType->flexibility_duration;
+        // Fetch user subscription with required relationships
+        $user_subscription = UserSubscription::with([
+            'deposits.deposit_periods',
+            'scheme.schemeType',
+            'schemeSetting'
+        ])->findOrFail($userData['subscription_id']);
 
-    $startDate = Carbon::parse($user_subscription->start_date);
-    $sixMonthsLater = null;
-    $dueDate = null;
-    $totalFlexibleSchemeAmount = 0;
+        // Get flexibility duration from the scheme
+        $flexibility_duration = $user_subscription->scheme->schemeType->flexibility_duration;
 
-    if (!empty($flexibility_duration)) {
-        $sixMonthsLater = $startDate->copy()->addMonths($flexibility_duration);
+        $startDate = Carbon::parse($user_subscription->start_date);
+        $sixMonthsLater = null;
+        $dueDate = null;
+        $totalFlexibleSchemeAmount = 0;
 
-        // Get the latest due_date from active DepositPeriods
-        $dueDate = $user_subscription->deposits
-            ->flatMap(function ($deposit) {
-                return $deposit->deposit_periods;
-            })
-            ->filter(function ($depositPeriod) {
-                return $depositPeriod->status == 1; // Only consider active statuses
-            })
-            ->pluck('due_date')
-            ->map(function ($dueDate) {
-                return $dueDate ? Carbon::parse($dueDate) : null; // Ensure Carbon parsing
-            })
-            ->filter() // Remove null values
-            ->sort()
-            ->last();
+        if (!empty($flexibility_duration)) {
+            $sixMonthsLater = $startDate->copy()->addMonths($flexibility_duration);
 
-        if ($dueDate) {
-            // Calculate total scheme amount for the flexibility duration
-            $deposit_id = $user_subscription->deposits->first()->id ?? null;
+            // Get the latest due_date from active DepositPeriods
+            $dueDate = $user_subscription->deposits
+                ->flatMap(function ($deposit) {
+                    return $deposit->deposit_periods;
+                })
+                ->filter(function ($depositPeriod) {
+                    return $depositPeriod->status == 1; // Only consider active statuses
+                })
+                ->pluck('due_date')
+                ->map(function ($dueDate) {
+                    return $dueDate ? Carbon::parse($dueDate) : null; // Ensure Carbon parsing
+                })
+                ->filter() // Remove null values
+                ->sort()
+                ->last();
 
-            if ($deposit_id) {
-                $totalFlexibleSchemeAmount = DepositPeriod::where('deposit_id', $deposit_id)
-                    ->where('due_date', '>=', $startDate->format('Y-m-d'))
-                    ->where('due_date', '<=', $dueDate->format('Y-m-d'))
-                    ->sum('scheme_amount');
-            }
-        }
-    }
+            if ($dueDate) {
+                // Calculate total scheme amount for the flexibility duration
+                $deposit_id = $user_subscription->deposits->first()->id ?? null;
 
-    // Create the deposit record
-    $deposit = Deposit::create([
-        'subscription_id' => $userData['subscription_id'],
-        'order_id' => $order_id,
-        'user_type' => 'admin',
-        'total_scheme_amount' => $userData['totalAmount'],
-        'service_charge' => $service_charge,
-        'gst_charge' => $gst_charge,
-        'final_amount' => $final_amount,
-        'payment_type' => $userData['payment_method'],
-        'paid_at' => Carbon::now(),
-        'status' => '1'
-    ]);
-
-    $data = json_decode($userData['checkdata'], true);
-
-    // Process each deposit period
-    foreach ($data as $item) {
-        $today = Carbon::now()->format('Y-m-d');
-        $due_date = !empty($item['date']) ? date('Y-m-d', strtotime($item['date'])) : null;
-        $itemAmount = $item['amount'] ?? 0;
-
-        if ($due_date) {
-            $dueDateCarbon = Carbon::parse($due_date);
-
-            // Check if the due date is after the start date and within the flexibility duration
-            if (
-                $startDate->lessThanOrEqualTo($dueDateCarbon) 
-                && $dueDateCarbon->greaterThanOrEqualTo($sixMonthsLater) 
-                && $user_subscription->scheme->schemeType->id !== SchemeType::FIXED_PLAN
-            ) {
-                // Ensure the flexibility duration is greater than 0 to avoid division by zero
-                $allowedAmount = ($flexibility_duration > 0) ? ($totalFlexibleSchemeAmount / $flexibility_duration) : 0;
-
-                // Check if the deposit amount exceeds the allowable amount
-                if (round($itemAmount) > round($allowedAmount)) {
-                    throw new \Exception('The deposit amount exceeds the allowable amount for the given period.');
-                    return false;
+                if ($deposit_id) {
+                    $totalFlexibleSchemeAmount = DepositPeriod::where('deposit_id', $deposit_id)
+                        ->where('due_date', '>=', $startDate->format('Y-m-d'))
+                        ->where('due_date', '<=', $dueDate->format('Y-m-d'))
+                        ->sum('scheme_amount');
                 }
             }
         }
 
-        // Create deposit period record
-        DepositPeriod::create([
-            'deposit_id' => $deposit->id,
-            'due_date' => $due_date,
-            'scheme_amount' => $itemAmount,
-            'is_due' => ($today > $due_date) ? '1' : '0',
-            'status' => '1',
+        // Create the deposit record
+        $deposit = Deposit::create([
+            'subscription_id' => $userData['subscription_id'],
+            'order_id' => $order_id,
+            'user_type' => 'admin',
+            'total_scheme_amount' => $userData['totalAmount'],
+            'service_charge' => $service_charge,
+            'gst_charge' => $gst_charge,
+            'final_amount' => $final_amount,
+            'payment_type' => $userData['payment_method'],
+            'paid_at' => Carbon::now(),
+            'status' => '1'
         ]);
-    }
 
-    return $deposit;
-}
+        $data = json_decode($userData['checkdata'], true);
+
+        // Process each deposit period
+        foreach ($data as $item) {
+            $today = Carbon::now()->format('Y-m-d');
+            $due_date = !empty($item['date']) ? date('Y-m-d', strtotime($item['date'])) : null;
+            $itemAmount = $item['amount'] ?? 0;
+
+            if ($due_date) {
+                $dueDateCarbon = Carbon::parse($due_date);
+
+                // Check if the due date is after the start date and within the flexibility duration
+                if (
+                    $startDate->lessThanOrEqualTo($dueDateCarbon)
+                    && $dueDateCarbon->greaterThanOrEqualTo($sixMonthsLater)
+                    && $user_subscription->scheme->schemeType->id !== SchemeType::FIXED_PLAN
+                ) {
+                    // Ensure the flexibility duration is greater than 0 to avoid division by zero
+                    $allowedAmount = ($flexibility_duration > 0) ? ($totalFlexibleSchemeAmount / $flexibility_duration) : 0;
+
+                    // Check if the deposit amount exceeds the allowable amount
+                    if (round($itemAmount) > round($allowedAmount)) {
+                        throw new \Exception('The deposit amount exceeds the allowable amount for the given period.');
+                        return false;
+                    }
+                }
+            }
+
+            // Create deposit period record
+            DepositPeriod::create([
+                'deposit_id' => $deposit->id,
+                'due_date' => $due_date,
+                'scheme_amount' => $itemAmount,
+                'is_due' => ($today > $due_date) ? '1' : '0',
+                'status' => '1',
+            ]);
+        }
+
+        return $deposit;
+    }
 
 
 
@@ -468,7 +468,7 @@ class UserService
     public function getUserSubscription($user_subscription_id): Object
     {
         $userSubscription = UserSubscription::find($user_subscription_id);
-        
+
         return  $userSubscription;
     }
 
@@ -545,7 +545,7 @@ class UserService
             $file = $request->receipt_upload;
             $assetName = UniqueHelper::UniqueID() . '-' . time();
             $filename =  $assetName . '.' . $file->getClientOriginalExtension();
-            $receipt_upload = 'recipts/' . $filename;   
+            $receipt_upload = 'recipts/' . $filename;
             $file->storeAs('public/', $receipt_upload);
         }
 
@@ -603,7 +603,7 @@ class UserService
     public function getTransactionDetails($deposit_id)
     {
         $transactionDetails = TransactionHistory::where('deposit_id', $deposit_id)->first();
-        
+
         return $transactionDetails;
     }
 
@@ -631,7 +631,7 @@ class UserService
         $total_period = $scheme->total_period;
         $startDate = Carbon::parse($data['start_date']);
         $endDate = $startDate->copy()->addMonths($scheme->total_period - 1);
-        
+
         return UserSubscription::create([
             'user_id' => $data['user_id'],
             'subscribe_amount' => $data['subscribe_amount'],
