@@ -43,7 +43,7 @@ class HoldSchema extends Command
             collect($userSubscriptions)->each(function ($userSubscription) use ($currentDate) {
                 $subscriptionStart = Carbon::parse($userSubscription->start_date);
                 $subscriptionEnd = Carbon::parse($userSubscription->end_date);
-                $dueDate = $user_subscription->deposits
+                $dueDate = $userSubscription->deposits
                     ->flatMap(function ($deposit) {
                         return $deposit->deposit_periods;
                     })
