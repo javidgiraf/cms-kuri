@@ -117,8 +117,18 @@
                         @foreach($userSubscriptions as $userSubscription)
                         <tr>
                             <th scope="row">{{ $userSubscriptions->firstitem() + $loop->index }}</th>
-                            <td>{{$userSubscription->user?->name}}</td>
-                            <td>{{$userSubscription->scheme?->title}}</td>
+                            <td>{{ $userSubscription->user?->name }}</td>
+                            <td>
+                                @if($userSubscription->status == $userSubscription::STATUS_DISCONTINUE || $userSubscription->is_closed == true)
+                                    <a class="changeSchemeBtn" data-subscription-id="{{ $userSubscription->id }}" data-scheme="{{ $userSubscription->scheme_id }}"
+                                    data-reason="{{ $userSubscription->reason }}"
+                                    data-bs-toggle="modal" data-bs-target="#changeSchemeModal"
+                                   style="cursor: pointer;">{{$userSubscription->scheme?->title}}</a>
+                                @else
+                                    {{$userSubscription->scheme?->title}}
+                               @endif
+                                    
+                            </td>
 
                             <td>{{ \App\Models\Setting::CURRENCY }} {{ number_format($userSubscription->subscribe_amount, 2) }}</td>
                             <td>
@@ -294,6 +304,56 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary updateMaturityBtn">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal fade" id="changeSchemeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Change Scheme</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Scheme <span class="text-danger">*</span></label>
+                        <select class="form-control mt-1" id="scheme" name="scheme" style="width: 100%;">
+                            <option value="">Select Scheme</option>
+                            @foreach($schemes as $scheme)
+                                <option data-scheme-type="{{ $scheme->scheme_type_id }}" value="{{ $scheme->id }}">{{ $scheme->title }}</option>
+                            @endforeach
+                        </select>
+                        <span class="changeSchemeError"></span>
+                    </div>
+                    
+                    <div class="form-group mt-3">
+                        <label>Start Date <span class="text-danger">*</span></label>
+
+                        <input type="date" class="form-control mt-1" name="start_date" id="start_date">
+                        <span class="startDateError"></span>
+                    </div>
+                    
+                    <div class="form-group mt-3 subscribeAmountDiv d-none">
+                <label>Subscribe Amount <span class="text-danger">*</span></label>
+
+                  <input type="text" class="form-control mt-1" name="subscribe_amount" id="subscribe_amount">
+                    <span class="subscribeAmountError"></span>
+                  
+              
+              </div>
+                                 
+                    <div class="form-group mt-2">
+                        <label>Reason</label>
+                        <textarea name="reason" id="reason" class="form-control mt-1"></textarea>
+                    </div>
+                    <input type="hidden" id="sub_id" name="sub_id">
+                    <input type="hidden" name="schemeTypeId" id="schemeTypeId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary updateBtn">Update</button>
                 </div>
             </div>
         </div>
@@ -491,6 +551,89 @@
                 }
             }
         });
+    });
+    
+      $("#subscriptionsTable").on('click', '.changeSchemeBtn', function() {
+        let subscription_id = $(this).data('subscription-id');
+        let scheme = $(this).data('scheme');
+        let reason = $(this).data('reason');
+
+        $("#sub_id").val(subscription_id);
+        // $("#scheme").val(scheme).trigger('change');
+        // $("#reason").val(reason);
+
+    });
+    
+
+    $(document).on('change', '#scheme', function(){
+        
+      let schemeType = $(this).find("option:selected").data('scheme-type');
+      $("#schemeTypeId").val(schemeType);
+      
+      if(schemeType == <?= \App\Models\SchemeType::FIXED_PLAN ?>) {
+        $(".subscribeAmountDiv").removeClass('d-none');
+      }
+      else {
+        $(".subscribeAmountDiv").addClass('d-none');
+      }
+    });
+    
+    $("#changeSchemeModal").on('click', '.updateBtn', function(){
+        
+      $(".is-invalid").removeClass('is-invalid');
+      $(".invalid-feedback").removeClass('invalid-feedback').text("");
+        
+      let sub_id = $("#sub_id").val();
+      let scheme = $("#scheme").val();
+      let reason = $("#reason").val();
+      let subscribe_amount = $("#subscribe_amount").val();
+      let schemeType = $("#schemeTypeId").val();
+      let start_date = $("#start_date").val();
+      
+      if(subscribe_amount == "") {
+          $("#subscribe_amount").addClass('is-invalid');
+          $(".subscribeAmountError").addClass('invalid-feedback').text("The subscribe amount field is required");
+      }
+       
+      $.ajax({
+            url: "{{ route('change-scheme') }}",
+            type: "POST",
+            data: {
+                sub_id: sub_id,
+                scheme: scheme,
+                reason: reason,
+                subscribe_amount: subscribe_amount,
+                schemeType: schemeType,
+                start_date: start_date,
+                _token: "{{ csrf_token() }}"
+            },
+            dataType: "JSON",
+            success: function(response) {
+                $("#changeSchemeModal").modal('hide');
+                toastr.success(response.message);
+                
+                setTimeout(function(){
+                    location.reload();
+                }, 2000);
+            },
+            error: function(error) {
+                console.log(error);
+                if(error.responseJSON.errors.scheme) {
+                    $("#scheme").addClass('is-invalid');
+                    $(".changeSchemeError").addClass('invalid-feedback').text(error.responseJSON.errors.scheme[0]);
+                }
+                
+                if(error.responseJSON.errors.start_date) {
+                    $("#start_date").addClass('is-invalid');
+                    $(".startDateError").addClass('invalid-feedback').text(error.responseJSON.errors.start_date[0]);
+                }
+                
+                if(error.responseJSON.errors.start_date) {
+                    $("#subscribe_amount").addClass('is-invalid');
+                    $(".subscribeAmountError").addClass('invalid-feedback').text(error.responseJSON.errors.subscribe_amount[0]);
+                }
+            }
+      });
     });
 </script>
 @endpush

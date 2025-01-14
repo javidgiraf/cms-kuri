@@ -200,7 +200,13 @@
            $('.btn-add-deposit-model').prop('disabled', true);
          },
          error: function(xhr, status, error) {
-           console.error('Error:', error);
+            //  toastr.error(error);
+           if (xhr.responseJSON && xhr.responseJSON.message) {
+                toastr.error(xhr.responseJSON.message); // Show error message from the backend
+            } else {
+                toastr.error('An unexpected error occurred.');
+            }
+            console.error('Error:', error);
          }
        });
 

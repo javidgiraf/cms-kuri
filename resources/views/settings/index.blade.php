@@ -38,6 +38,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+                                @if(count($settings) > 0)
                                 @foreach($settings as $setting)
                                 <tr>
                                     <th scope="row">{{ $settings->firstitem() + $loop->index }}</th>
@@ -57,6 +58,11 @@
 
                                 </tr>
                                 @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="4">No records available in table</td>
+                                    </tr>
+                                @endif
 
                             </tbody>
                         </table>

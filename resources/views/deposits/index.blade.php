@@ -191,10 +191,12 @@
                     $('.btn-add-deposit-model').prop('disabled', true);
                 });
         
-                    if(data.responseJSON.errors.transaction_no) {
-                        $("#transaction_no").addClass('is-invalid');
-                        $(".transaction_no").addClass('invalid-feedback').text(data.responseJSON.errors.transaction_no[0]);
-                    }
+                    if (data.responseJSON && data.responseJSON.errors && data.responseJSON.errors.transaction_no) {
+        $("#transaction_no").addClass('is-invalid');
+        $(".transaction_no").addClass('invalid-feedback').text(data.responseJSON.errors.transaction_no[0]);
+    } else {
+        toastr.error('An error occurred: ' + (data.responseJSON.message || 'Please try again.'));
+    }
                 
             }
         });

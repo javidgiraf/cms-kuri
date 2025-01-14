@@ -42,6 +42,7 @@
                 </tr>
               </thead>
               <tbody>
+                @if(count($schemeSettings) > 0)  
                 @foreach ($schemeSettings as $setting)
                 <tr>
                   <td>{{ $loop->iteration + ($schemeSettings->currentPage() - 1) * $schemeSettings->perPage() }}</td>
@@ -59,6 +60,11 @@
                   </td>
                 </tr>
                 @endforeach
+                @else
+                    <tr>
+                        <td colspan="8">No records available in table</td>
+                    </tr>
+                @endif
               </tbody>
             </table>
             {{ $schemeSettings->onEachSide(5)->links() }}

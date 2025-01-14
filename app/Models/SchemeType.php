@@ -9,7 +9,7 @@ class SchemeType extends Model
 {
     use HasFactory;
 
-    const FIXED_PLAN = 2;
+    const FIXED_PLAN = 1;
 
     protected $guarded = [];
 }

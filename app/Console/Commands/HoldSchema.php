@@ -34,61 +34,36 @@ class HoldSchema extends Command
         return true;
     }
 
-    function holdScheme()
-    {
-        try {
-            $userSubscriptions = UserSubscription::with('scheme')->get();
-            collect($userSubscriptions)->map(function ($userSubscription) {
-                $subscriptionStart = Carbon::parse($userSubscription->start_date);
-                $subscriptionEnd = Carbon::parse($userSubscription->end_date);
-        
-                $currentMonthStart = $subscriptionStart->copy()->startOfMonth();
-                $currentMonthEnd = $currentMonthStart->copy()->addDays(10);
-        
-                $nextMonthStart = $subscriptionStart->copy()->addMonth()->startOfMonth();
-                $nextMonthEnd = $nextMonthStart->copy()->addDays(10);
-        
-                $lastMonthStart = $subscriptionEnd->copy()->subMonth()->startOfMonth();
-                $lastMonthEnd = $lastMonthStart->copy()->addDays(10);
-        
-                if ($subscriptionStart->between($currentMonthStart, $currentMonthEnd)) {
-                    $userSubscription->update(['status' => UserSubscription::STATUS_ONHOLD]);
-        
-                    SubscriptionHistory::updateOrCreate(
-                        ['subscription_id' => $userSubscription->id],
-                        [
-                            'status' => UserSubscription::STATUS_ONHOLD,
-                            'is_closed' => false
-                        ]
-                    );
-                }
-        
-                if ($subscriptionStart->between($nextMonthStart, $nextMonthEnd)) {
-                    $userSubscription->update(['status' => UserSubscription::STATUS_ONHOLD]);
-        
-                    SubscriptionHistory::updateOrCreate(
-                        ['subscription_id' => $userSubscription->id],
-                        [
-                            'status' => UserSubscription::STATUS_ONHOLD,
-                            'is_closed' => false
-                        ]
-                    );
-                }
-        
-                if ($subscriptionStart->between($lastMonthStart, $lastMonthEnd)) {
-                    $userSubscription->update(['status' => UserSubscription::STATUS_ONHOLD]);
-        
-                    SubscriptionHistory::updateOrCreate(
-                        ['subscription_id' => $userSubscription->id],
-                        [
-                            'status' => UserSubscription::STATUS_ONHOLD,
-                            'is_closed' => false
-                        ]
-                    );
-                }
-            });
-        } catch (\Exception $e) {
-            Log::error('Error in Hold Scheme: ' . $e->getMessage());
-        }
+    private function holdScheme()
+{
+    try {
+        $userSubscriptions = UserSubscription::with('scheme')->get();
+        $currentDate = Carbon::now(); 
+
+        collect($userSubscriptions)->each(function ($userSubscription) use ($currentDate) {
+            $subscriptionStart = Carbon::parse($userSubscription->start_date);
+            $subscriptionEnd = Carbon::parse($userSubscription->end_date);
+
+            
+            if ($currentDate->diffInDays($subscriptionStart) <= 10 || $currentDate->diffInDays($subscriptionEnd) <= 10) {
+                
+                $userSubscription->update(['status' => UserSubscription::STATUS_ONHOLD]);
+
+                // Update or create subscription history
+                SubscriptionHistory::updateOrCreate(
+                    ['subscription_id' => $userSubscription->id],
+                    [
+                        'status' => UserSubscription::STATUS_ONHOLD,
+                        'is_closed' => false
+                    ]
+                );
+            }
+        });
+    } catch (\Exception $e) {
+        // Log the error for debugging purposes
+        Log::error('Error in Hold Scheme: ' . $e->getMessage());
     }
+}
+
+
 }

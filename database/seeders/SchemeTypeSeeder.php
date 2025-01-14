@@ -20,18 +20,18 @@ class SchemeTypeSeeder extends Seeder
         // Define the schemes to be added
         $schemes = [
             [
-                'title' => 'Flexible Plan',
-                'shortcode' => 'Flexible',
-                'flexibility_duration' => 6,
-                'status' => 1,
+                'title' => 'Fixed Plan',
+                'shortcode' => 'Fixed',
+                'flexibility_duration' => null,
+                'status' => true,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ],
             [
-                'title' => 'Fixed Plan',
-                'shortcode' => 'Fixed',
-                'flexibility_duration' => null,
-                'status' => 1,
+                'title' => 'Flexible Plan',
+                'shortcode' => 'Flexible',
+                'flexibility_duration' => 6,
+                'status' => true,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ],
@@ -39,7 +39,7 @@ class SchemeTypeSeeder extends Seeder
                 'title' => 'Gold Plan',
                 'shortcode' => 'Gold',
                 'flexibility_duration' => 6,  // Assuming 6 months for the Gold Plan
-                'status' => 1,
+                'status' => true,
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
             ]

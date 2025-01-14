@@ -136,6 +136,7 @@ use App\Services\UserService;
                                 </tr>
                             </thead>
                             <tbody>
+                                @if(count($users) > 0)
                                 @foreach($users as $user)
                                 <tr>
                                     <th scope="row">{{ $users->firstItem() + $loop->index }}</th>
@@ -189,6 +190,11 @@ use App\Services\UserService;
 
                                 </tr>
                                 @endforeach
+                                @else
+                                    <tr>
+                                        <td colspan="8">No records available in table</td>
+                                    </tr>
+                                @endif
 
                             </tbody>
 

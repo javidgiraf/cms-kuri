@@ -24,7 +24,7 @@
                         <form method="POST" action="{{ route('password.update') }}">
                             @csrf
                             @method('PUT')
-                            <div class="form-group mt-2">
+                            <div class="form-group mt-4">
                                 <label for="current_password">Current Password</label>
                                 <input type="password" name="current_password" id="current_password" class="form-control" required>
                                 @error('current_password')

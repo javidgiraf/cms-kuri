@@ -106,4 +106,5 @@ Route::group(['middleware' => ['auth', 'permission']], function () {
     Route::get('accounts', [AccountController::class, 'index'])->name('accounts.index');
     Route::get('transaction-details', [TransactionDetailController::class, 'index'])->name('transaction-details.index');
     Route::get('fetch-transaction-details', [TransactionDetailController::class, 'fetchTransactionDetails'])->name('transaction-details.fetch-transaction-details');
+    Route::post('/change-scheme', [UserController::class, 'changeScheme'])->name('change-scheme');
 });

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Customer;
 use App\Models\Deposit;
 use App\Models\Scheme;
+use App\Models\SchemeType;
 use App\Models\User;
 use App\Models\UserSubscription;
 use Illuminate\Http\Request;
@@ -37,7 +38,14 @@ class HomeController extends Controller
         })->where('is_admin', false)->count();
         $schemesCount = Scheme::where('status', true)->count();
 
-        $latestPayments = Deposit::with('userSubscription')->latest()->take(5)->get();
+        $latestPayments = Deposit::with('userSubscription.scheme')
+            ->whereHas('userSubscription.scheme', function($query) {
+                $query->whereIn('scheme_type_id', SchemeType::pluck('id'));
+                $query->distinct('scheme_type_id');
+            })
+            ->latest()  // Get the latest payments first
+            ->take(5)  // Limit to the top 5
+            ->get();
 
         $schemes = [];
         Scheme::all()->each(function ($scheme) use (&$schemes) {

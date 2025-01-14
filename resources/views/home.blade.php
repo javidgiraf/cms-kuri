@@ -72,7 +72,7 @@
                     <div class="col-xxl-4 col-md-12">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title">Scheme Chart</h5>
+                                <h5 class="card-title">Monthly Scheme Chart</h5>
 
                                 <!-- Column Chart -->
                                 <div id="columnChart"></div>
@@ -150,7 +150,7 @@
                             <div class="card-body">
                                 <h5 class="card-title">Latest Payments</h5>
 
-                                <table class="table table-borderless">
+                                <table class="table table-striped">
                                     <thead>
                                         <tr>
                                             <th scope="col">#</th>
@@ -161,6 +161,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
+                                        @if(count($latestPayments) > 0)
                                         @foreach($latestPayments as $latestPayment)
                                         <tr>
                                             <th scope="row">{{ $loop->iteration }}</th>
@@ -170,6 +171,11 @@
                                             <td>{{ \App\Models\Setting::CURRENCY }} {{ number_format($latestPayment->total_scheme_amount, 2) }}</td>
                                         </tr>
                                         @endforeach
+                                        @else
+                                            <tr class="text-center">
+                                                <td colspan="5">No Records available in table</td>
+                                            </tr>
+                                        @endif
                                     </tbody>
                                 </table>
 
@@ -233,7 +239,7 @@
 
 
                     <div class="card-body pb-0">
-                        <h5 class="card-title">Scheme Chart</h5>
+                        <h5 class="card-title">Total Received Amount</h5>
 
                         <div id="trafficChart" style="min-height: 400px;" class="echart"></div>
 

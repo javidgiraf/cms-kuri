@@ -28,6 +28,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use PDO;
 use PhpParser\Node\Expr\Print_;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
@@ -267,6 +268,8 @@ class UserController extends Controller
         return response()->json(['data' => '1']);
         //  return redirect()->route('users.index')->with('success', 'Deposit Paid successfully');
     }
+    
+    
     public function saveTransactionDetails(TransactionPostRequest $request, UserService $userService)
     {
         $input = $request->all();
@@ -503,4 +506,59 @@ class UserController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Maturity Status changed successfully', 'data' => $userSubscription]);    
     }
+    
+    public function changeScheme(Request $request)
+{
+    $inputs = $request->all();
+
+    // Validate the inputs
+    $validator = Validator::make($inputs, [
+        
+        'scheme' => ['required', Rule::exists('schemes', 'id')], // Validate scheme ID
+        'start_date' => ['required', 'date'], 
+        'subscribe_amount' => ['nullable', 'numeric'] 
+    ]);
+
+    // Return validation errors if validation fails
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'errors' => $validator->errors()
+        ], 422);
+    }
+
+    try {
+        // Find the scheme
+        $scheme = Scheme::findOrFail($inputs['scheme']);
+        $total_period = $scheme->total_period;
+
+        // Parse and validate the start_date
+        $start_date = Carbon::parse($inputs['start_date']);
+        $end_date = $start_date->copy()->addMonths($total_period - 1);
+
+        // Update the user subscription
+        $userSubscription = UserSubscription::findOrFail($inputs['sub_id']);
+        $userSubscription->update([
+            'subscribe_amount' => $inputs['subscribe_amount'] ?? 0,
+            'scheme_id' => $inputs['scheme'],
+            'start_date' => $start_date->format('Y-m-d'),
+            'end_date' => $end_date->format('Y-m-d'),
+            'status' => true, // Ensure status is active
+            'is_closed' => false // Ensure the scheme is not closed
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Scheme Changed Successfully'
+        ]);
+    } catch (\Exception $e) {
+        // Handle any unexpected errors
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while changing the scheme.',
+            'error' => $e->getMessage()
+        ], 500);
+    }
+}
+
 }

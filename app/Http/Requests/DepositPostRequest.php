@@ -23,7 +23,7 @@ class DepositPostRequest extends FormRequest
     {
         return [
             'payment_method' => 'required',
-            'transaction_no' => 'required|unique:transaction_details,transaction_no',
+            'transaction_no' => 'required|unique:transaction_details,transaction_no|unique:transaction_histories,transaction_no',
             'receipt_upload'     => 'mimes:jpeg,png,jpg,gif,svg,pdf|max:2048',
         ];
     }

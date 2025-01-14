@@ -148,9 +148,7 @@ use App\Services\UserService;
                                         </span></td>
                                     <td>
                                         <a href="{{ route('admins.edit', encrypt($admin->id)) }}" style="margin-right: 10px;"><i class="bi bi-pencil-square"></i></a>
-                                        @role('superadmin')
-                                            <a href="javascript:void(0);" onclick="event.preventDefault(); deleteAdmin('{{ $admin->id }}');"><i class="bi bi-x-circle"></i></a>
-                                        @endrole
+                                        
                                     </td>
                                     <form method="post" action="{{ route('admins.destroy', encrypt($admin->id)) }}" style="display:none" id="delete-form-{{ $admin->id }}">
                                         @csrf

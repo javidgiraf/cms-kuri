@@ -18,7 +18,7 @@
          Please check the list of unpaid date to pay from admin. </p>
        <div class="success"></div>
        <div class="error_transaction_msg"></div>
-
+        
        <table class="table" id="upaid-list">
          <thead>
            <tr>
@@ -41,7 +41,7 @@
 
              </th>
              <td id="date{{$result_date['date']}}">{{ $result_date['date'] }}</td>
-             <td width="30%" id="amount{{$result_date['date']}}">@if($result_date['amount'] != null) {{ $result_date['amount'] }} @else <input type="text" name="amount" id="deposit_amount{{ $result_date['date'] }}" class="form-control"> @endif</td>
+             <td width="30%" id="amount{{$result_date['date']}}">@if($result_date['schemeType'] == \App\Models\SchemeType::FIXED_PLAN) {{ $result_date['amount'] }} @else <input type="text" name="amount" id="deposit_amount{{ $result_date['date'] }}" class="form-control"> @endif</td>
 
 
 
@@ -228,7 +228,7 @@
            });
 
            // Show error message if zero amount is detected
-           if (hasZeroAmount) {
+           if (hasZeroAmount || totalAmount == 0) {
              
               toastr.error('Error: One or more selected items have an amount of zero. Please check and update the amounts.');
              return false;
