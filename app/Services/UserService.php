@@ -24,6 +24,7 @@ use App\Models\Discontinue;
 use App\Models\TransactionDetail;
 use App\Models\TransactionHistory;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class UserService
 {
@@ -351,6 +352,7 @@ class UserService
 
     public function payDeposit(array $userData): Deposit
     {
+        DB::beginTransaction();
 
         // Generate a unique order ID
         $order_id = UniqueHelper::UniqueID();
@@ -367,7 +369,6 @@ class UserService
             'schemeSetting'
         ])->findOrFail($userData['subscription_id']);
 
-        
         $scheme = $user_subscription->scheme;
         $schemeType = $scheme->schemeType;
         $schemeSetting = $scheme->schemeSetting;
@@ -377,23 +378,42 @@ class UserService
         $flexibility_duration = $schemeType->flexibility_duration ?? 0;
         $duration = $schemeSetting->due_duration ?? 0;
 
-       
-        $sixMonthsLater = $startDate->clone()->addMonths($flexibility_duration - 1);
+        // Calculate 6 months after the start date
+        $sixMonthsLater = $startDate->clone()->subMonths($flexibility_duration);
+
+        // Track all payments made after the 6 months period
+        $paymentsAfterSixMonths = DepositPeriod::whereHas('deposit', function ($query) use ($user_subscription) {
+            $query->where('subscription_id', $user_subscription->id);
+        })
+            ->where('due_date', '>', $sixMonthsLater) // Payments after 6 months
+            ->get();
+
+        // Check if any month after the 6-month period has more than one payment
+        $paymentMonths = [];
+        foreach ($paymentsAfterSixMonths as $payment) {
+            $month = Carbon::parse($payment->due_date)->format('Y-m'); // Extract year-month
+            if (isset($paymentMonths[$month])) {
+                DB::rollBack();
+                throw new \Exception('Only one payment can be made per month after the 6-month period.');
+            }
+            $paymentMonths[$month] = true;
+        }
+
+        // Check for validity of the payment if flexibility duration is set
         $totalFlexibleSchemeAmount = DepositPeriod::whereIn('deposit_id', $user_subscription->deposits->pluck('id'))
-            ->whereBetween('due_date', [$startDate, $sixMonthsLater])
+            ->where('due_date', '>=', $startDate->format('Y-m-d'))
+            ->where('due_date', '<', $sixMonthsLater->format('Y-m-d'))
             ->where('status', true)
             ->sum('scheme_amount');
-
+        
         if (
             $schemeType->id !== SchemeType::FIXED_PLAN &&
-            $currentDate->greaterThanOrEqualTo(
-                $startDate->clone()->addMonths($flexibility_duration)
-            )
+            $currentDate->greaterThanOrEqualTo($sixMonthsLater)
         ) {
             $allowedAmount = $flexibility_duration ? ($totalFlexibleSchemeAmount / $flexibility_duration) : 0;
 
-            // Check if deposit exceeds allowable amount
             if ($total_scheme_amount > round($allowedAmount)) {
+                DB::rollBack();
                 throw new \Exception('The deposit amount exceeds the allowable amount for the given period.');
             }
         }
@@ -419,10 +439,10 @@ class UserService
             $due_date = !empty($item['date']) ? Carbon::parse($item['date'])->format('Y-m-d') : null;
 
             if (!$due_date || $today < $due_date) {
+                DB::rollBack();
                 throw new \Exception('Invalid due date provided or payment date is in the future.');
             }
 
-            // Create deposit period record
             DepositPeriod::create([
                 'deposit_id' => $deposit->id,
                 'due_date' => $due_date,
@@ -432,10 +452,10 @@ class UserService
             ]);
         }
 
+        DB::commit();
+
         return $deposit;
     }
-
-
 
 
 

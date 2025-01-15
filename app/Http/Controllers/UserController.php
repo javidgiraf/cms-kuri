@@ -267,8 +267,10 @@ class UserController extends Controller
         $userService->saveTransactionHistory($input, $receipt_upload);
         $userService->saveBankTransfers($input, $receipt_upload);
 
-        return response()->json(['data' => '1']);
-        //  return redirect()->route('users.index')->with('success', 'Deposit Paid successfully');
+        return response()->json([
+            'success' => true,
+            'message' => 'Payment successfully completed'
+        ]);
     }
 
 

@@ -17,4 +17,9 @@ class DepositPeriod extends Model
         'is_due',
         'status',
     ];
+
+    public function deposit()
+    {
+        return $this->belongsTo(Deposit::class, 'deposit_id', 'id');
+    }
 }

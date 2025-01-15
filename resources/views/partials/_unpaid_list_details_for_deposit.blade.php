@@ -16,28 +16,32 @@
           text-align: end;
         }
       </style>
-      @if($current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN)
       <p class="change">
         Please check the list of unpaid date to pay from admin.
       </p>
-      @endif
+
       <div class="success"></div>
       <div class="error_transaction_msg"></div>
-      @if($current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN)
+
       <table class="table" id="upaid-list" width="100%">
         <thead>
           <tr>
             <th scope="col">
+              @if($current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN)
               <input type="checkbox" name="all_permission" class="all_permission">
+              @else
+              SI No
+              @endif
             </th>
             <th scope="col">Date</th>
             <th scope="col">Amount</th>
-
+            <th></th>
 
           </tr>
         </thead>
 
         <tbody>
+          @if($current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN)
           @if(count($current_plan_history['result_dates']) > 0)
           @foreach($current_plan_history['result_dates'] as $result_date)
 
@@ -49,7 +53,7 @@
             </th>
             <td id="date{{$result_date['date']}}">{{ $result_date['date'] }}</td>
             <td width="30%" id="amount{{$result_date['date']}}">@if($result_date['schemeType'] == \App\Models\SchemeType::FIXED_PLAN) {{ $result_date['amount'] }} @else <input type="text" name="amount" id="deposit_amount{{ $result_date['date'] }}" class="form-control"> @endif</td>
-
+            <td></td>
 
 
           </tr>
@@ -61,28 +65,31 @@
             <td colspan="3">No Records available in table</td>
           </tr>
           @endif
-
+          @else
+          <tr>
+            <td class="siNo">
+              1
+            </td>
+            <td><input type="date" name="payment_date[]" class="form-control payment_date"></td>
+            <td><input type="text" name="payment_amount[]" class="form-control payment_amount"></td>
+            <td><a class="btn btn-danger btn-remove"><i class="bi bi-basket"></i></a></td>
+          </tr>
+          @endif
         </tbody>
+        @if($current_plan_history['scheme']['scheme_type_id'] !== \App\Models\SchemeType::FIXED_PLAN)
+        <tfoot>
+          <tr>
+            <td colspan="4">
+              <a class="btn-plus btn btn-success" style="float: right;"><i class="bi bi-plus"></i></a>
+            </td>
+          </tr>
+
+        </tfoot>
+        @endif
       </table>
-      @else
 
-      <div class="row mb-3">
-        <label for="inputText" class="col-sm-2 col-form-label">Date</label>
-        <div class="col-sm-10">
-          <input type="date" name="payment_date" class="form-control" id="payment_date">
-          <span class="paymentDateError"></span>
-        </div>
-      </div>
 
-      <div class="row mb-3">
-        <label for="inputText" class="col-sm-2 col-form-label">Amount</label>
-        <div class="col-sm-10">
-          <input type="text" name="payment_amount" class="form-control" id="payment_amount">
-          <span class="paymentAmountError"></span>
-        </div>
-      </div>
 
-      @endif
       <div class="col-md-12">
         <input type="button" class="btn btn-success <?= $current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN ? 'btn-add-deposit-model' : '' ?>" id="submit" value="Submit" style="background:#4154f1;">
       </div>
@@ -269,73 +276,150 @@
       <script>
         $(document).ready(function() {
 
-          $('.btn-add-deposit-model').prop('disabled', true);
-          $('[name="all_permission" ]').on('click', function() {
-            $('.btn-add-deposit-model').prop('disabled', false);
-            if ($(this).is(':checked')) {
-              $.each($('.permission'), function() {
-                $(this).prop('checked', true);
+              $('.btn-add-deposit-model').prop('disabled', true);
+              $('[name="all_permission" ]').on('click', function() {
+                $('.btn-add-deposit-model').prop('disabled', false);
+                if ($(this).is(':checked')) {
+                  $.each($('.permission'), function() {
+                    $(this).prop('checked', true);
+                  });
+                } else {
+                  $.each($('.permission'), function() {
+                    $(this).prop('checked', false);
+                    $('.btn-add-deposit-model').prop('disabled', true);
+                  });
+                }
               });
-            } else {
-              $.each($('.permission'), function() {
-                $(this).prop('checked', false);
-                $('.btn-add-deposit-model').prop('disabled', true);
-              });
-            }
-          });
 
-          <?php if($current_plan_history['scheme']['scheme_type_id'] !== \App\Models\SchemeType::FIXED_PLAN): ?>
+              <?php if ($current_plan_history['scheme']['scheme_type_id'] !== \App\Models\SchemeType::FIXED_PLAN): ?>
 
-          $(document).on('click', '#submit', function() {
-            let payment_date = $("#payment_date").val();
-            let payment_amount = $("#payment_amount").val();
+                function siNo() {
+                  let i = 1;
+                  $(".siNo").each(function() {
+                    $(this).text(i);
+                    i++;
+                  });
+                }
 
-            $('.is-invalid').removeClass('is-invalid');
-            $('.invalid-feedback').removeClass('invalid-feedback').text('');
+                // Add new row
+                $("#upaid-list").on("click", ".btn-plus", function() {
+                  let html = `
+    <tr>
+      <td class="siNo"></td>
+      <td><input type="date" name="payment_date[]" class="form-control payment_date"></td>
+      <td><input type="text" name="payment_amount[]" class="form-control payment_amount"></td>
+      <td><a class="btn btn-danger btn-remove"><i class="bi bi-basket"></i></a></td>
+    </tr>`;
+                  $("#upaid-list tbody").append(html);
+                  siNo();
+                });
 
-            // Validation
-            if (!payment_date) {
-              $("#payment_date").addClass('is-invalid');
-              $(".paymentDateError").addClass('invalid-feedback').text('Payment date is required.');
-              return;
-            }
-            if (!payment_amount || isNaN(payment_amount) || parseFloat(payment_amount) <= 0) {
-              $("#payment_amount").addClass('is-invalid');
-              $(".paymentAmountError").addClass('invalid-feedback').text('Payment amount must be a positive number.');
-              
-              return;
-            }
+                // Remove row
+                $("#upaid-list").on("click", ".btn-remove", function() {
+                  $(this).closest("tr").remove();
+                  siNo();
+                });
 
-            // Proceed if validation passes
-            $("#exampleModal").modal('show');
+                // Submit data
+                $(document).on("click", "#submit", function() {
+                  let isValid = true;
+                  let paymentData = [];
+                  totalAmount = 0;
+                  
 
-            totalAmount = payment_amount;
-            checkedPermissions.push({
-                date: payment_date,
-                amount: payment_amount
+                  // Clear previous validation errors
+                  $(".is-invalid").removeClass("is-invalid");
+                  $(".invalid-feedback").remove();
+
+                  // Validate all rows
+                  $("#upaid-list tbody tr").each(function() {
+                    const payment_date = $(this).find(".payment_date").val();
+                    const payment_amount = $(this).find(".payment_amount").val();
+                    let rowValid = true;
+
+                    // Validate payment_date
+                    if (!payment_date) {
+                      $(this)
+                        .find(".payment_date")
+                        .after('<div class="invalid-feedback">Payment date is required.</div>')
+                        .addClass("is-invalid");
+                      rowValid = false;
+                    }
+
+                    // Validate payment_amount
+                    if (!payment_amount || isNaN(payment_amount) || parseFloat(payment_amount) <= 0) {
+                      $(this)
+                        .find(".payment_amount")
+                        .after('<div class="invalid-feedback">Payment amount must be a positive number.</div>')
+                        .addClass("is-invalid");
+                      rowValid = false;
+                    }
+
+                    // Collect valid data
+                    if (rowValid) {
+                      paymentData.push({
+                        date: payment_date,
+                        amount: parseFloat(payment_amount),
+                      });
+
+                      checkedPermissions.push({
+                        date: payment_date,
+                        amount: parseFloat(payment_amount)
+                      });
+                    }
+
+                    isValid = isValid && rowValid;
+                  });
+
+                  // Stop execution if validation fails
+                  if (!isValid) {
+                    return;
+                  }
+
+                  $("#exampleModal").modal("show");
+
+                  // Append rows to permissions table
+                  const tableBody = $("#permissionsTable tbody");
+                  tableBody.empty(); // Clear existing rows
+
+                  paymentData.forEach((data) => {
+                    const row = $("<tr>").append(
+                      $("<td>").text(data.date),
+                      $("<td>").text(number_format(data.amount, 2, ".", ","))
+                    );
+                    tableBody.append(row);
+                    totalAmount += data.amount;
+                  });
+
+                  // Update total amount
+                  $("#total-amount-value").text(number_format(totalAmount, 2, ".", ","));
+
+                  // Show the modal
+                  
+                });
+
+                // Number formatting function
+                function number_format(number, decimals, dec_point, thousands_sep) {
+                  number = parseFloat(number).toFixed(decimals);
+                  const parts = number.split(".");
+                  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousands_sep);
+                  return parts.join(dec_point);
+                }
+
+              <?php endif; ?>
+
             });
-            const row = $('<tr>').append(
-              $('<td>').text(payment_date),
-              $('<td>').text(number_format(totalAmount, 2, '.', ','))
-            );
-            $("#permissionsTable tbody").html(row);
-            $('#total-amount-value').text(number_format(payment_amount, 2, '.', ','));
-          });
-        });
-
-        <?php endif; ?>
 
 
-
-        function checkIfAnyChecked() {
-          return $('.permission:checked').length > 0;
-        }
-        $(document).delegate(".permission", "click", function() {
-          if ($(this).is(':checked')) {
-            $('.btn').prop('disabled', false);
-          } else {
-            $('.btn').prop('disabled', !checkIfAnyChecked());
-            //$('.btn').prop('disabled', true);
-          }
-        });
+              function checkIfAnyChecked() {
+                return $('.permission:checked').length > 0;
+              }
+              $(document).delegate(".permission", "click", function() {
+                if ($(this).is(':checked')) {
+                  $('.btn').prop('disabled', false);
+                } else {
+                  $('.btn').prop('disabled', !checkIfAnyChecked());
+                  //$('.btn').prop('disabled', true);
+                }
+              });
       </script>

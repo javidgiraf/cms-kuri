@@ -43,7 +43,7 @@
                             </div>
                         </div>
                         <div class="row mb-3" id="scheme_list">
-                            <label for="inputText" class="col-sm-2 col-form-label">Users Subscriptions</label>
+                            <label for="inputText" class="col-sm-2 col-form-label">Scheme</label>
                             <div class="col-sm-10">
                                 <select name="user_subscription_id" class="form-control" id="user_subscription_id">
 
@@ -110,11 +110,17 @@
             }
         });
     });
+
     $(document).on('click', '.btn-pay-deposit', function() {
+
+        $("#payment_method").removeClass('is-invalid');
+        $(".payment_method").removeClass('invalid-feedback').text("");
+        $("#transaction_no").removeClass('is-invalid');
+        $(".transaction_no").removeClass('invalid-feedback').text("");
         //console.log(checkedPermissions);
 
         var user_subscription_id = $("#user_subscription_id").val();
-
+        
         var jsonData = JSON.stringify(checkedPermissions);
 
         const formData = new FormData($("#frm_transation_details")[0]);
@@ -170,7 +176,7 @@
             success: function(response) {
                 $('#loading').hide();
                 $('#exampleModal').modal('hide');
-                toastr.success('Deposit Added Successfully');
+                toastr.success(response.message);
                 for (var i = 0; i < checkedPermissions.length; i++) {
                     var permission = checkedPermissions[i];
                     var id = permission.date;
@@ -197,10 +203,15 @@
                 if (data.responseJSON && data.responseJSON.errors && data.responseJSON.errors.transaction_no) {
                     $("#transaction_no").addClass('is-invalid');
                     $(".transaction_no").addClass('invalid-feedback').text(data.responseJSON.errors.transaction_no[0]);
+                    return false;
                 } else {
-                    toastr.error('An error occurred: ' + (data.responseJSON.message || 'Please try again.'));
+                    toastr.error('Validation error occurred: ' + (data.responseJSON.message || 'Please try again.'));
+                    $("#exampleModal").modal('hide');
+                    $("#permissionsTable tbody").empty();
+                    return false;
                 }
-
+                
+            
             }
         });
     });
