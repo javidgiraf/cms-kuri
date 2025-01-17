@@ -39,12 +39,11 @@ class Scheme extends Model
 
     public function setPdfFileAttribute($file)
     {
-        if (!$file) {
+        if (is_null($file)) {
             $this->attributes['pdf_file'] = null;
             return;
         }
 
-        // Delete the existing file if it exists
         if (!empty($this->attributes['pdf_file'])) {
             $existingFilePath = 'schemes/' . $this->attributes['pdf_file'];
             if (Storage::disk('public')->exists($existingFilePath)) {

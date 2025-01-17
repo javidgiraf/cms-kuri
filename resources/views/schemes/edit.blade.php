@@ -71,7 +71,7 @@
 
                     <input class="form-control @error('pdf_file') is-invalid @enderror" type="file" name="pdf_file" id="schemeFile">
                   </div>
-                  <a href="{{ route('viewPdf', $scheme->id) }}" target="_blank">View PDF</a>
+                  
                   @error('pdf_file')
                     <span class="invalid-feedback">{{ $message }}</span>
                   @enderror

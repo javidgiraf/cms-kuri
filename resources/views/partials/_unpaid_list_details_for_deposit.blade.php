@@ -88,10 +88,12 @@
         @endif
       </table>
 
-
-
-      <div class="col-md-12">
+        
+      <div class="col-md-12 d-flex justify-content-between">
         <input type="button" class="btn btn-success <?= $current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN ? 'btn-add-deposit-model' : '' ?>" id="submit" value="Submit" style="background:#4154f1;">
+        @if($current_plan_history['scheme']['scheme_type_id'] !== \App\Models\SchemeType::FIXED_PLAN)
+          <span><b>{{ __('Total Paid') }} : {{ number_format($current_plan_history['totalPaidAmount'], 2) }}</b></span>
+        @endif
       </div>
 
       </div>

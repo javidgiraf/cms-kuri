@@ -89,10 +89,4 @@ class SchemeController extends Controller
             ->with('success', 'Scheme deleted successfully');
     }
 
-    // public function viewPdf($id)
-    // {
-    //     $schemePdf = Scheme::findOrFail($id)->pdf_file;
-
-    //     return Pdf::stream($schemePdf);
-    // }
 }

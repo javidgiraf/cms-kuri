@@ -153,7 +153,10 @@
                             </tbody>
                         </table>
 
-                        {{ $goldrates->onEachSide(5)->links() }}
+                        {{ $goldrates->onEachSide(5)->appends([
+                                    'from_date' => request('from_date'), 
+                                    'to_date' => request('to_date')
+                                ])->links() }}
                         <!-- End Table with stripped rows -->
 
                     </div>

@@ -14,6 +14,7 @@ use App\Helpers\LogActivity;
 use App\Http\Requests\CreateSubscriptionRequest;
 use App\Http\Requests\DepositPostRequest;
 use App\Http\Requests\TransactionPostRequest;
+use App\Models\DepositPeriod;
 use App\Models\Discontinue;
 use App\Models\Scheme;
 use App\Models\Setting;
@@ -207,7 +208,9 @@ class UserController extends Controller
         $user_id = decrypt($input['user_id']);
         $scheme = UserSubscription::where('id', $user_subscription_id)->first();
         $scheme_id =  $scheme->scheme_id;
+
         $current_plan_history = $userService->getCurrentPlanHistory($user_subscription_id, $user_id, $scheme_id);
+       
         $data2 =  view('partials._unpaid_list_details_for_deposit')
             ->with(compact('current_plan_history', 'user_subscription_id', 'scheme_id'))
             ->render();
