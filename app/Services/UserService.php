@@ -209,11 +209,7 @@ class UserService
         $currentDate = now();
         $flexibility_duration = $user_subscription->scheme->schemeType->flexibility_duration ?? 0;
         $endSixMonthPeriod = Carbon::parse($user_subscription->start_date)->addMonths($flexibility_duration)->format('Y-m-d');
-        $totalFlexibleSchemeAmount = DepositPeriod::whereIn('deposit_id', $user_subscription->deposits->pluck('id'))
-            ->where('due_date', '>=', $startDate)
-            ->where('due_date', '<', $endSixMonthPeriod)
-            ->where('status', true)
-            ->sum('scheme_amount');
+        $totalFlexibleSchemeAmount = Deposit::whereSubscriptionId($user_subscription_id)->sum('total_scheme_amount');
 
         // Flatten $due_dates if it's a nested collection or array
         $due_dates = collect($user_subscription_deposits)
@@ -368,7 +364,6 @@ class UserService
         DB::beginTransaction();
 
         try {
-            
             $order_id = UniqueHelper::UniqueID();
             $service_charge = 0.00;
             $gst_charge = 0.00;
@@ -376,7 +371,6 @@ class UserService
             $final_amount = $total_scheme_amount + $service_charge + $gst_charge;
             $user_id = auth()->user()->id;
 
-            
             $user_subscription = UserSubscription::with([
                 'deposits.deposit_periods',
                 'scheme.schemeType',
@@ -385,35 +379,45 @@ class UserService
 
             $scheme = $user_subscription->scheme;
             $schemeType = $scheme->schemeType;
-            $schemeSetting = $scheme->schemeSetting;
-
             $startDate = Carbon::parse($user_subscription->start_date);
             $currentDate = now();
-            $flexibility_duration = $schemeType->flexibility_duration ?? 0;
-            $endSixMonthPeriod = (clone $startDate)->addMonths($flexibility_duration);
+            $flexibility_duration = $schemeType->flexibility_duration ?? 0; // First 6 months
+            $endSixMonthPeriod = $startDate->addMonths($flexibility_duration);
 
-            $duplicateMonths = DepositPeriod::whereHas('deposit', function ($query) use ($user_subscription) {
-                $query->where('subscription_id', $user_subscription->id);
-            })
-                ->where('due_date', '>', $endSixMonthPeriod)
-                ->get()
-                ->groupBy(function ($item) {
-                    return Carbon::parse($item->due_date)->format('Y-m');
+            // Ensure single payment per month after six months
+            if ($schemeType->id !== SchemeType::FIXED_PLAN && $currentDate->greaterThan($endSixMonthPeriod)) {
+                $duplicatePayments = DepositPeriod::whereHas('deposit', function ($query) use ($user_subscription) {
+                    $query->where('subscription_id', $user_subscription->id);
                 })
-                ->filter(function ($group) {
-                    return $group->count() > 1;
-                });
+                    ->where('due_date', '>=', $endSixMonthPeriod->format('Y-m-d'))
+                    ->get()
+                    ->groupBy(function ($item) {
+                        return Carbon::parse($item->due_date)->format('Y-m');
+                    })
+                    ->filter(fn($group) => $group->count() > 1);
 
-            if ($duplicateMonths->isNotEmpty()) {
-                throw new \Exception('Only one payment is allowed per month after the 6-month period.');
+                if ($duplicatePayments->isNotEmpty()) {
+                    $months = $duplicatePayments->keys()->join(', ');
+                    throw new \Exception("Only one payment is allowed per month after the 6-month period. Issues found in months: $months.");
+                }
             }
 
-            // Validate total flexible scheme amount
-            $totalFlexibleSchemeAmount = DepositPeriod::whereIn('deposit_id', $user_subscription->deposits->pluck('id'))
-                ->where('due_date', '>=', $startDate->format('Y-m-d'))
-                ->where('due_date', '<', $endSixMonthPeriod->format('Y-m-d'))
-                ->where('status', true)
-                ->sum('scheme_amount');
+            // Validate the deposit amount after six months
+            $allowedAmount = $total_scheme_amount / $flexibility_duration;
+            foreach (json_decode($userData['checkdata'], true) as $item) {
+                $dueDate = Carbon::parse($item['date']);
+                if ($schemeType->id !== SchemeType::FIXED_PLAN && $dueDate->greaterThan($currentDate)) {
+                    throw new \Exception('The payment date cannot be in the future.');
+                }
+
+                if (
+                    $schemeType->id !== SchemeType::FIXED_PLAN 
+                    && $dueDate->greaterThanOrEqualTo($endSixMonthPeriod) 
+                    && $item['amount'] > round($allowedAmount)
+                ) {
+                    throw new \Exception("The deposit amount exceeds the allowable amount of $allowedAmount after the 6-month period.");
+                }
+            }
 
             // Create deposit record
             $deposit = Deposit::create([
@@ -429,23 +433,10 @@ class UserService
                 'status' => '1',
             ]);
 
-            $data = collect(json_decode($userData['checkdata'], true));
             $insertData = [];
             $goldDepositData = [];
-
-            foreach ($data as $item) {
+            foreach (json_decode($userData['checkdata'], true) as $item) {
                 $dueDate = Carbon::parse($item['date']);
-                if (now()->isBefore($dueDate)) {
-                    throw new \Exception('The payment date cannot be after the current date.');
-                }
-
-                if ($schemeType->id !== SchemeType::FIXED_PLAN && $currentDate->diffInMonths($startDate) > $flexibility_duration) {
-                    $allowedAmount = $flexibility_duration ? ($totalFlexibleSchemeAmount / $flexibility_duration) : 0;
-                    if ($item['amount'] > round($allowedAmount)) {
-                        throw new \Exception('The deposit amount exceeds the allowable amount for the period.');
-                    }
-                }
-
                 $insertData[] = [
                     'deposit_id' => $deposit->id,
                     'due_date' => $dueDate->format('Y-m-d'),
@@ -475,7 +466,6 @@ class UserService
             }
 
             DepositPeriod::insert($insertData);
-
             if (!empty($goldDepositData)) {
                 GoldDeposit::insert($goldDepositData);
             }
@@ -488,6 +478,7 @@ class UserService
             throw $e;
         }
     }
+
 
 
 

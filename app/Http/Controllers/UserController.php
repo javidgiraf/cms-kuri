@@ -16,6 +16,7 @@ use App\Http\Requests\DepositPostRequest;
 use App\Http\Requests\TransactionPostRequest;
 use App\Models\DepositPeriod;
 use App\Models\Discontinue;
+use App\Models\Deposit;
 use App\Models\Scheme;
 use App\Models\Setting;
 use App\Models\User;
@@ -121,9 +122,6 @@ class UserController extends Controller
         $input = $request->all();
         $user = User::findOrFail($id);
         (isset($input['status']) && $input['status']) ? $input['status'] = 1 : $input['status'] = 0;
-        $input['country_id'] = $input['country_id'];
-        $input['state_id'] = $input['state_id'];
-        $input['district_id'] = $input['district_id'];
         $user = $userService->getUser($id);
         $userService->updateUser($user, $input);
         LogActivity::addToLog('User ' . $input['name'] . ' updated by' . auth()->user()->name);
@@ -205,14 +203,21 @@ class UserController extends Controller
     {
         $input = $request->all();
         $user_subscription_id = decrypt($input['user_subscription_id']);
+
         $user_id = decrypt($input['user_id']);
         $scheme = UserSubscription::where('id', $user_subscription_id)->first();
         $scheme_id =  $scheme->scheme_id;
 
         $current_plan_history = $userService->getCurrentPlanHistory($user_subscription_id, $user_id, $scheme_id);
-       
+
+        $depositPeriods = DepositPeriod::select('due_date', 'scheme_amount')
+            ->whereHas('deposit', function ($query) use ($user_subscription_id) {
+                $query->where('subscription_id', $user_subscription_id);
+            })
+            ->latest()->get();
+
         $data2 =  view('partials._unpaid_list_details_for_deposit')
-            ->with(compact('current_plan_history', 'user_subscription_id', 'scheme_id'))
+            ->with(compact('current_plan_history', 'user_subscription_id', 'scheme_id', 'depositPeriods'))
             ->render();
 
         return response()->json(['data' => $data2]);
@@ -269,10 +274,12 @@ class UserController extends Controller
         $receipt_upload = $userService->uploadImage($request);
         $userService->saveTransactionHistory($input, $receipt_upload);
         $userService->saveBankTransfers($input, $receipt_upload);
-
+        $totalSchemeAmount = Deposit::whereSubscriptionId($input['subscription_id'])->sum('total_scheme_amount');
+        
         return response()->json([
             'success' => true,
-            'message' => 'Payment successfully completed'
+            'message' => 'Payment successfully completed',
+            'totalSchemeAmount' => $totalSchemeAmount
         ]);
     }
 

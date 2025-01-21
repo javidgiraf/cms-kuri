@@ -111,6 +111,13 @@
         });
     });
 
+    function number_format(number, decimals, dec_point, thousands_sep) {
+        number = parseFloat(number).toFixed(decimals);
+        const parts = number.split(".");
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousands_sep);
+        return parts.join(dec_point);
+    }
+
     $(document).on('click', '.btn-pay-deposit', function() {
 
         $("#payment_method").removeClass('is-invalid');
@@ -120,7 +127,7 @@
         //console.log(checkedPermissions);
 
         var user_subscription_id = $("#user_subscription_id").val();
-        
+
         var jsonData = JSON.stringify(checkedPermissions);
 
         const formData = new FormData($("#frm_transation_details")[0]);
@@ -174,8 +181,13 @@
                 $('#frmtrasaction').removeClass('alert alert-success').html('');
             },
             success: function(response) {
+                console.log(response);
                 $('#loading').hide();
                 $('#exampleModal').modal('hide');
+                if (response.totalSchemeAmount) {
+                    let totalSchemeAmount = response.totalSchemeAmount;
+                    $(".totalPaid").html("<b>Total Paid : " + number_format(totalSchemeAmount, 2, ".", ",") + "</b>");
+                }
                 toastr.success(response.message);
                 for (var i = 0; i < checkedPermissions.length; i++) {
                     var permission = checkedPermissions[i];
@@ -210,8 +222,8 @@
                     $("#permissionsTable tbody").empty();
                     return false;
                 }
-                
-            
+
+
             }
         });
     });
