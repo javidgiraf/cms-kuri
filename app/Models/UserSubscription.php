@@ -23,7 +23,9 @@ class UserSubscription extends Model
         'end_date',
         'is_closed',
         'status',
-        'subscribe_amount'
+        'subscribe_amount',
+        'claim_date',
+        'claim_status'
     ];
 
     public function user()

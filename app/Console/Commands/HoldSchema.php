@@ -42,7 +42,7 @@ class HoldSchema extends Command
             $currentDate = now();
             $subscriptionCount = UserSubscription::count();
 
-            UserSubscription::with('scheme.schemeSetting')->chunk($subscriptionCount, function ($userSubscriptions) use ($currentDate) {
+            UserSubscription::with('scheme.schemeSetting', 'deposits')->chunk($subscriptionCount, function ($userSubscriptions) use ($currentDate) {
                 $userSubscriptions->each(function ($userSubscription) use ($currentDate) {
 
                     $startDate = Carbon::parse($userSubscription->start_date);
@@ -71,12 +71,18 @@ class HoldSchema extends Command
                             ) &&
                             $userSubscription->scheme->scheme_type_id != SchemeType::FIXED_PLAN
                         ) {
-                            DB::transaction(function () use ($userSubscription) {
+                            DB::transaction(function () use ($userSubscription, $currentDate) {
                                 $userSubscription->update(['status' => UserSubscription::STATUS_ONHOLD]);
 
                                 SubscriptionHistory::updateOrCreate(
                                     ['subscription_id' => $userSubscription->id],
                                     [
+                                        'scheme_id' => $userSubscription->scheme->id,
+                                        'subscribe_amount' => $userSubscription->subscribe_amount,
+                                        'start_date' => $userSubscription->start_date,
+                                        'end_date' => $userSubscription->end_date,
+                                        'hold_date' => $currentDate->format('Y-m-d'),
+                                        'total_collected_amount' => $userSubscription->deposits->sum('total_scheme_amount'),
                                         'status' => UserSubscription::STATUS_ONHOLD,
                                         'is_closed' => false,
                                     ]

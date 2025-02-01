@@ -216,8 +216,9 @@
                     $("#transaction_no").addClass('is-invalid');
                     $(".transaction_no").addClass('invalid-feedback').text(data.responseJSON.errors.transaction_no[0]);
                     return false;
-                } else {
-                    toastr.error('Validation error occurred: ' + (data.responseJSON.message || 'Please try again.'));
+                } 
+                else {
+                    toastr.error(data.responseJSON.message);
                     $("#exampleModal").modal('hide');
                     $("#permissionsTable tbody").empty();
                     return false;

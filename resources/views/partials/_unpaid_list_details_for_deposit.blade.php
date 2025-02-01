@@ -1,6 +1,7 @@
       @if($current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN)
       <h5 class="card-title">Unpaid List</h5>
       @endif
+
       <style>
         .change {
           padding: 10px;
@@ -40,6 +41,13 @@
           </tr>
         </thead>
 
+        @php
+        $schemeSetting = \App\Models\SchemeSetting::where(
+        'scheme_id',
+        $current_plan_history['scheme']->id
+        )->first();
+        @endphp
+
         <tbody>
           @if($current_plan_history['scheme']['scheme_type_id'] == \App\Models\SchemeType::FIXED_PLAN)
           @if(count($current_plan_history['result_dates']) > 0)
@@ -71,7 +79,14 @@
               1
             </td>
             <td><input type="date" name="payment_date[]" class="form-control payment_date"></td>
-            <td><input type="text" name="payment_amount[]" class="form-control payment_amount"></td>
+            <td>
+              <input type="number"
+                name="payment_amount[]"
+                class="form-control payment_amount"
+                min="{{ $schemeSetting->min_payable_amount }}"
+                max="{{ $schemeSetting->max_payable_amount }}"
+                required>
+            </td>
             <td><a class="btn btn-danger btn-remove"><i class="bi bi-basket"></i></a></td>
           </tr>
           @endif
@@ -98,24 +113,31 @@
       <div class="col-lg-2"></div>
       @if($current_plan_history['scheme']['scheme_type_id'] !== \App\Models\SchemeType::FIXED_PLAN)
       <div class="col-lg-8">
-      <table class="table table-striped" width="100%">
-        <thead>
-          <tr>
-            <th>SI No</th>
-            <th>Due Date</th>
-            <th>Scheme Amount</th>
-          </tr>
-        </thead>
-        @foreach($depositPeriods as $key => $period)
-        <tbody>
-          <tr>
-            <td>{{ $key + 1 }}</td>
-            <td>{{ date('d/m/Y', strtotime($period->due_date)) }}</td>
-            <td>{{ number_format($period->scheme_amount, 2) }}</td>
-          </tr>
-        </tbody>
-        @endforeach
-      </table>
+        <table class="table table-striped" width="100%">
+          <thead>
+            <tr>
+              <th>SI No.</th>
+              <th>Date</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if(count($depositPeriods) > 0)
+            @foreach($depositPeriods as $key => $period)
+            <tr>
+              <td>{{ $key + 1 }}</td>
+              <td>{{ date('d/m/Y', strtotime($period->due_date)) }}</td>
+              <td>{{ number_format($period->scheme_amount, 2) }}</td>
+            </tr>
+            @endforeach
+            @else
+            <tr>
+              <td colspan="3">{{ __('No Records available in table') }}</td>
+            </tr>
+            @endif
+          </tbody>
+
+        </table>
       </div>
 
       @endif
@@ -348,21 +370,25 @@
             });
 
             // Submit data
-            $(document).on("click", "#submit", function() {
+            $(document).on("click", "#submit", function(e) {
               let isValid = true;
               let paymentData = [];
-              totalAmount = 0;
-
+              let totalAmount = 0;
 
               // Clear previous validation errors
               $(".is-invalid").removeClass("is-invalid");
               $(".invalid-feedback").remove();
+
+              // Convert min/max amounts from Blade to numbers
+              let minAmount = <?= $schemeSetting->min_payable_amount ?>;
+              let maxAmount = <?= $schemeSetting->max_payable_amount ?>;
 
               // Validate all rows
               $("#upaid-list tbody tr").each(function() {
                 const payment_date = $(this).find(".payment_date").val();
                 const payment_amount = $(this).find(".payment_amount").val();
                 let rowValid = true;
+                let paymentAmountNum = parseFloat(payment_amount); // Convert input to number
 
                 // Validate payment_date
                 if (!payment_date) {
@@ -374,10 +400,22 @@
                 }
 
                 // Validate payment_amount
-                if (!payment_amount || isNaN(payment_amount) || parseFloat(payment_amount) <= 0) {
+                if (!payment_amount || isNaN(paymentAmountNum) || paymentAmountNum <= 0) {
                   $(this)
                     .find(".payment_amount")
                     .after('<div class="invalid-feedback">Payment amount must be a positive number.</div>')
+                    .addClass("is-invalid");
+                  rowValid = false;
+                } else if (paymentAmountNum < minAmount) {
+                  $(this)
+                    .find(".payment_amount")
+                    .after(`<div class="invalid-feedback">Minimum payment amount is ${minAmount}.</div>`)
+                    .addClass("is-invalid");
+                  rowValid = false;
+                } else if (paymentAmountNum > maxAmount) {
+                  $(this)
+                    .find(".payment_amount")
+                    .after(`<div class="invalid-feedback">Maximum payment amount is ${maxAmount}.</div>`)
                     .addClass("is-invalid");
                   rowValid = false;
                 }
@@ -386,12 +424,7 @@
                 if (rowValid) {
                   paymentData.push({
                     date: payment_date,
-                    amount: parseFloat(payment_amount),
-                  });
-
-                  checkedPermissions.push({
-                    date: payment_date,
-                    amount: parseFloat(payment_amount)
+                    amount: paymentAmountNum,
                   });
                 }
 
@@ -420,10 +453,8 @@
 
               // Update total amount
               $("#total-amount-value").text(number_format(totalAmount, 2, ".", ","));
-
-              // Show the modal
-
             });
+
 
             // Number formatting function
             function number_format(number, decimals, dec_point, thousands_sep) {

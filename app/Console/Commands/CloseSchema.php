@@ -81,8 +81,15 @@ class CloseSchema extends Command
                     SubscriptionHistory::updateOrCreate(
                         ['subscription_id' => $userSubscription->id],
                         [
+                            'scheme_id' => $userSubscription->scheme->id,
+                            'subscribe_amount' => $userSubscription->subscribe_amount,
+                            'start_date' => $userSubscription->start_date,
+                            'end_date' => $userSubscription->end_date,
+                            'closed_date' => $currentDate->format('Y-m-d'),
+                            'total_collected_amount' => $userSubscription->deposits->sum('total_scheme_amount'),
                             'description' => 'Scheme period of months completed',
-                            'is_closed' => true
+                            'is_closed' => true,
+                            'status' => $userSubscription->status
                         ]
                     );
 

@@ -14,8 +14,8 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('notification:send')->everyFiveMinutes();
         $schedule->command('update:gold-rate')->dailyAt('10:00');
-        $schedule->command('hold:scheme')->dailyAt('06:00');
-        $schedule->command('close:scheme')->dailyAt('06:00');
+        $schedule->command('hold:scheme')->everyFiveMinutes();
+        $schedule->command('close:scheme')->everyFiveMinutes();
     }
 
     /**

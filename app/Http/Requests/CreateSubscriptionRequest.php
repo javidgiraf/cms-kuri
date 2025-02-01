@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\SchemeSetting;
 use App\Models\SchemeType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -25,14 +26,25 @@ class CreateSubscriptionRequest extends FormRequest
     {
         $rules = [
             'user_id' => ['required', Rule::exists('users', 'id')],
-            'scheme_id' => ['required', Rule::exists('schemes','id')],
+            'scheme_id' => ['required', Rule::exists('schemes', 'id')],
             'start_date' => ['required'],
             'subscribe_amount' => ['nullable'],
             'status' => ['required', 'boolean']
         ];
 
-        if(request('schemeTypeId') == SchemeType::FIXED_PLAN) {
-            $rules['subscribe_amount'] = ['required', 'numeric'];
+        $schemeSetting = SchemeSetting::where('scheme_id', SchemeType::FIXED_PLAN)->first();
+
+        if (request('schemeTypeId') == SchemeType::FIXED_PLAN) {
+
+            $minAmount = (int) $schemeSetting->min_payable_amount;
+            $maxAmount = (int) $schemeSetting->max_payable_amount;
+
+            $rules['subscribe_amount'] = [
+                'required',
+                'numeric',
+                "min:{$minAmount}",
+                "max:{$maxAmount}"
+            ];
         }
 
         return $rules;

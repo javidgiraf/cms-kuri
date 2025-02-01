@@ -120,7 +120,7 @@ class TransactionDetailsFilter extends Component
 
         $users = User::whereHas('roles', function ($query) {
             $query->whereName('customer');
-        })->with('roles')->with('customer')->get();
+        })->with('roles')->with('customer')->where('is_admin', false)->get();
         return  $users;
     }
     protected function schemes()

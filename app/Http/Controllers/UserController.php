@@ -275,7 +275,7 @@ class UserController extends Controller
         $userService->saveTransactionHistory($input, $receipt_upload);
         $userService->saveBankTransfers($input, $receipt_upload);
         $totalSchemeAmount = Deposit::whereSubscriptionId($input['subscription_id'])->sum('total_scheme_amount');
-        
+
         return response()->json([
             'success' => true,
             'message' => 'Payment successfully completed',
@@ -505,14 +505,22 @@ class UserController extends Controller
         }
 
         $userSubscription = UserSubscription::findOrFail($inputs['subscription_id']);
+
         $userSubscription->reason = $inputs['maturity_reason'];
         $userSubscription->is_closed = $inputs['maturity_status'];
         $userSubscription->update();
 
         SubscriptionHistory::whereSubscriptionId($inputs['subscription_id'])
             ->update([
+                'scheme_id' => $userSubscription->scheme->id,
+                'subscribe_amount' => $userSubscription->subscribe_amount,
+                'start_date' => $userSubscription->start_date,
+                'end_date' => $userSubscription->end_date,
+                'closed_date' => now()->format('Y-m-d'),
+                'total_collected_amount' => $userSubscription->deposits->sum('total_scheme_amount'),
                 'is_closed' => $inputs['maturity_status'],
-                'description' => $inputs['maturity_reason']
+                'description' => $inputs['maturity_reason'],
+                'status' => $userSubscription->status
             ]);
 
         return response()->json(['success' => true, 'message' => 'Maturity Status changed successfully', 'data' => $userSubscription]);
@@ -542,18 +550,21 @@ class UserController extends Controller
             // Find the scheme
             $scheme = Scheme::findOrFail($inputs['scheme']);
             $total_period = $scheme->total_period;
+            $startDate = Carbon::parse($inputs['start_date']);
 
-            // Parse and validate the start_date
-            $start_date = Carbon::parse($inputs['start_date']);
-            $end_date = $start_date->copy()->addMonths($total_period - 1)->lastOfMonth();
+            $subscriptionStart = ($startDate->format('d') > 15) ? 
+                $startDate->copy()->addMonths(1)->firstOfMonth() 
+                : $startDate->copy()->firstOfMonth();
+
+            $subscriptionEnd = $startDate->copy()->addMonths($total_period - 1)->lastOfMonth();
 
             // Update the user subscription
             $userSubscription = UserSubscription::findOrFail($inputs['sub_id']);
             $userSubscription->update([
                 'subscribe_amount' => $inputs['subscribe_amount'] ?? 0,
                 'scheme_id' => $inputs['scheme'],
-                'start_date' => $start_date->format('Y-m-d'),
-                'end_date' => $end_date->format('Y-m-d'),
+                'start_date' => $subscriptionStart->format('Y-m-d'),
+                'end_date' => $subscriptionEnd->format('Y-m-d'),
                 'status' => true, // Ensure status is active
                 'is_closed' => false // Ensure the scheme is not closed
             ]);
@@ -570,5 +581,19 @@ class UserController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    public function updateClaimStatus(Request $request)
+    {
+        UserSubscription::findOrFail($request->subscription_id)
+            ->update([
+                'claim_date' => now()->format('Y-m-d'),
+                'claim_status' => $request->status
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Claimed Successfully'
+        ]);    
     }
 }
