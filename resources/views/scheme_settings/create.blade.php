@@ -81,9 +81,21 @@
               <!-- Due Duration -->
               <div class="row mb-3">
                 <label for="due_duration" class="col-sm-2 col-form-label">Due Duration <span class="text-danger">*</span></label>
-                <div class="col-sm-10">
+                <div class="col-sm-4">
                   <input type="text" id="due_duration" name="due_duration" class="form-control @error('due_duration') is-invalid @enderror" value="{{ old('due_duration') }}" placeholder="Enter Due Duration">
                   @error('due_duration')
+                    <span class="invalid-feedback">{{ $message }}</span>
+                  @enderror
+                </div>
+                <div class="col-sm-3">
+                  <input type="text" id="start_from" name="start_from" class="form-control @error('start_from') is-invalid @enderror" value="{{ old('start_from') }}" placeholder="Start From">
+                  @error('start_from')
+                    <span class="invalid-feedback">{{ $message }}</span>
+                  @enderror
+                </div>
+                <div class="col-sm-3">
+                  <input type="text" id="end_to" name="end_to" class="form-control @error('end_to') is-invalid @enderror" value="{{ old('end_to') }}" placeholder="End To">
+                  @error('end_to')
                     <span class="invalid-feedback">{{ $message }}</span>
                   @enderror
                 </div>

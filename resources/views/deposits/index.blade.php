@@ -51,6 +51,7 @@
 
                             </div>
                         </div>
+
                         <div class="row mb-3" id="unpaid_depost_list">
                         </div>
 
@@ -125,7 +126,7 @@
             return false;
         } else {
             if ($("#payment_method").val() != "cash") {
-                
+
                 if ($("#transaction_no").val() == "") {
                     $("#transaction_no").addClass('is-invalid');
                     $(".transaction_no").addClass('invalid-feedback').text("Please enter Transaction No!");
@@ -150,6 +151,8 @@
         formData.append('subscription_id', user_subscription_id);
         formData.append('totalAmount', totalAmount);
         formData.append('checkdata', jsonData);
+        // formData.append('_token', '{{ csrf_token() }}');
+
         $.ajax({
             url: '{{ route("users.pay-deposit") }}', // URL to your Laravel route
             type: 'POST',
@@ -185,19 +188,19 @@
                 $('.btn-add-deposit-model').prop('disabled', true);
             },
             error: function(data) {
-                
+
                 $.each($('.permission'), function() {
                     $(this).prop('checked', false);
                     $('.btn-add-deposit-model').prop('disabled', true);
                 });
-        
-                    if (data.responseJSON && data.responseJSON.errors && data.responseJSON.errors.transaction_no) {
-        $("#transaction_no").addClass('is-invalid');
-        $(".transaction_no").addClass('invalid-feedback').text(data.responseJSON.errors.transaction_no[0]);
-    } else {
-        toastr.error('An error occurred: ' + (data.responseJSON.message || 'Please try again.'));
-    }
-                
+
+                if (data.responseJSON && data.responseJSON.errors && data.responseJSON.errors.transaction_no) {
+                    $("#transaction_no").addClass('is-invalid');
+                    $(".transaction_no").addClass('invalid-feedback').text(data.responseJSON.errors.transaction_no[0]);
+                } else {
+                    toastr.error('An error occurred: ' + (data.responseJSON.message || 'Please try again.'));
+                }
+
             }
         });
     });

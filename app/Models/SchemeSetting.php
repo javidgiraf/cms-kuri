@@ -10,7 +10,7 @@ class SchemeSetting extends Model
     use HasFactory;
     
     protected $fillable = [
-        'scheme_id', 'max_payable_amount', 'min_payable_amount', 'denomination', 'due_duration', 'status'
+        'scheme_id', 'max_payable_amount', 'min_payable_amount', 'denomination', 'due_duration', 'start_from', 'end_to', 'status'
     ];
 
     public function scheme()

@@ -16,7 +16,7 @@
     <section class="section">
         <div class="row">
             <div class="col-lg-12">
-                
+
 
                 <div class="card">
                     <div class="card-title d-flex justify-content-between m-3 mt-0">
@@ -44,7 +44,7 @@
                                         @endforeach
                                     </select>
                                     @error('scheme_id')
-                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -55,7 +55,7 @@
                                 <div class="col-sm-10">
                                     <input type="number" id="max_payable_amount" name="max_payable_amount" class="form-control @error('max_payable_amount') is-invalid @enderror" value="{{ old('max_payable_amount', $schemeSetting->max_payable_amount) }}" placeholder="Enter Max Payable Amount">
                                     @error('max_payable_amount')
-                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -66,7 +66,7 @@
                                 <div class="col-sm-10">
                                     <input type="number" id="min_payable_amount" name="min_payable_amount" class="form-control @error('min_payable_amount') is-invalid @enderror" value="{{ old('min_payable_amount', $schemeSetting->min_payable_amount) }}" placeholder="Enter Min Payable Amount">
                                     @error('min_payable_amount')
-                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -82,9 +82,21 @@
                             <!-- Due Duration -->
                             <div class="row mb-3">
                                 <label for="due_duration" class="col-sm-2 col-form-label">Due Duration <span class="text-danger">*</span></label>
-                                <div class="col-sm-10">
+                                <div class="col-sm-4">
                                     <input type="text" id="due_duration" name="due_duration" class="form-control @error('due_duration') is-invalid @enderror" value="{{ old('due_duration', $schemeSetting->due_duration) }}" placeholder="Enter Due Duration">
                                     @error('due_duration')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="col-sm-3">
+                                    <input type="text" id="start_from" name="start_from" class="form-control @error('start_from') is-invalid @enderror" value="{{ old('start_from') }}" placeholder="Start From">
+                                    @error('start_from')
+                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                                <div class="col-sm-3">
+                                    <input type="text" id="end_to" name="end_to" class="form-control @error('end_to') is-invalid @enderror" value="{{ old('end_to') }}" placeholder="End To">
+                                    @error('end_to')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>

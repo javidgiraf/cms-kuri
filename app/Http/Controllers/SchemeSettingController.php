@@ -30,6 +30,8 @@ class SchemeSettingController extends Controller
       'max_payable_amount' => 'required|numeric',
       'min_payable_amount' => 'required|numeric',
       'due_duration' => 'required|integer',
+      'start_from' => 'integer',
+      'end_to' => 'integer',
       'status' => 'required|boolean',
     ]);
 
@@ -56,6 +58,8 @@ class SchemeSettingController extends Controller
       'max_payable_amount' => 'required|numeric',
       'min_payable_amount' => 'required|numeric',
       'due_duration' => 'required|integer',
+      'start_from' => 'integer',
+      'end_to' => 'integer',
       'status' => 'required|boolean',
     ]);
 

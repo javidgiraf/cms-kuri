@@ -356,7 +356,6 @@ class UserController extends Controller
     public function saveFailedProcessStatus(Request $request, UserService $userService)
     {
         $input = $request->all();
-        $input['deposit_id'] = $input['deposit_id'];
         $data = $userService->saveFailedProcessStatus($input);
         return response()->json(['data' => $data]);
     }
@@ -385,7 +384,6 @@ class UserController extends Controller
     {
         $input = $request->all();
         $input['id'] = $input['user_id'];
-        $input['status'] = $input['status'];
         $data = $userService->changeStatus($input);
         return response()->json(['success' => true, 'message' => 'Status Changed Successfully', 'data' => $data]);
     }
@@ -535,7 +533,7 @@ class UserController extends Controller
 
             // Parse and validate the start_date
             $start_date = Carbon::parse($inputs['start_date']);
-            $end_date = $start_date->copy()->addMonths($total_period - 1);
+            $end_date = $start_date->copy()->addMonths($total_period - 1)->lastOfMonth();
 
             // Update the user subscription
             $userSubscription = UserSubscription::findOrFail($inputs['sub_id']);

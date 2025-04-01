@@ -13,8 +13,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('notification:send')->everyFiveMinutes();
-        $schedule->command('update:gold-rate')->dailyAt('10:15');
-        $schedule->command('hold:scheme')->monthlyOn(1, '0:00');
+        $schedule->command('update:gold-rate')->dailyAt('10:00');
+        $schedule->command('hold:scheme')->dailyAt('08:00');
         $schedule->command('close:scheme')->everyFifteenMinutes();
     }
 

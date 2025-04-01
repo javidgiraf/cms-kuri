@@ -23,6 +23,7 @@ class SchemeService
             'title'    => $userData['title'],
             'total_period'    => $userData['total_period'],
             'scheme_type_id'    => $userData['scheme_type_id'],
+            'pdf_file' => $userData['pdf_file'],
             'description'    => $userData['description'],
             'status'    => $userData['status'],
 

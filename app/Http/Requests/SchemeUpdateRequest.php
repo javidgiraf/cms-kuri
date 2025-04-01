@@ -25,7 +25,8 @@ class SchemeUpdateRequest extends FormRequest
         return [
             'title' => ['required', Rule::unique('schemes', 'title')->ignore(decrypt($this->route('scheme')))],
             'total_period' => ['required', 'numeric'],
-            'scheme_type_id' => ['required', Rule::exists('scheme_types', 'id')]
+            'scheme_type_id' => ['required', Rule::exists('scheme_types', 'id')],
+            'pdf_file' => ['mimes:pdf']
         ];
     }
 }

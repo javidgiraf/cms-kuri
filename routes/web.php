@@ -38,6 +38,18 @@ use Illuminate\Support\Facades\Log;
 |
 */
 
+Route::get('/dates', function(){
+    $currentDate = Carbon::parse('2025-07-30');
+    $holdDate = Carbon::parse('2025-01-01');
+    $months = $currentDate->diffInMonths($holdDate);
+    $change = $currentDate->greaterThanOrEqualTo($holdDate);
+
+    return [
+        $months,
+        $change
+    ];
+});
+
 Route::get('/clear-cache', function () {
 
     Artisan::call('optimize:clear');
@@ -107,4 +119,5 @@ Route::group(['middleware' => ['auth', 'permission']], function () {
     Route::get('transaction-details', [TransactionDetailController::class, 'index'])->name('transaction-details.index');
     Route::get('fetch-transaction-details', [TransactionDetailController::class, 'fetchTransactionDetails'])->name('transaction-details.fetch-transaction-details');
     Route::post('/change-scheme', [UserController::class, 'changeScheme'])->name('change-scheme');
+    Route::get('/viewPdf/{id}', [SchemeController::class, 'viewPdf'])->name('viewPdf');
 });

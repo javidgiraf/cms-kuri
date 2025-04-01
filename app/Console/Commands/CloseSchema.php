@@ -2,10 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Models\DepositPeriod;
+use App\Models\SchemeType;
 use App\Models\SubscriptionHistory;
 use App\Models\UserSubscription;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class CloseSchema extends Command
 {
@@ -33,52 +36,57 @@ class CloseSchema extends Command
         return true;
     }
 
-
     private function closeScheme()
     {
         try {
-            $userSubscriptions = UserSubscription::with('scheme', 'deposits.deposit_periods')->get();
+            $userSubscriptions = UserSubscription::with('scheme.schemeType', 'deposits.deposit_periods')->get();
 
             collect($userSubscriptions)->map(function ($userSubscription) {
+                $currentDate = now();
                 $startDate = Carbon::parse($userSubscription->start_date);
                 $endDate = Carbon::parse($userSubscription->end_date);
-                $totalPeriodMonths = $userSubscription->scheme->total_period - 1;
-                $expectedEndDate = $startDate->copy()->addMonths($totalPeriodMonths);
+                $duration = $userSubscription->scheme->total_period;
+                $flexibility_duration = $userSubscription->scheme->schemeType->flexibility_duration;
 
-                // Get the last due date for active deposit periods
-                $lastDueDate = $userSubscription->deposits
-                    ->flatMap(function ($deposit) {
-                        return $deposit->deposit_periods;
+                // Check if there are unpaid deposit periods
+                $hasUnpaidPeriods = $userSubscription->deposits
+                    ->pluck('id')
+                    ->flatMap(function ($depositId) {
+                        return DepositPeriod::where('deposit_id', $depositId)
+                            ->where('scheme_amount', 0)
+                            ->where('status', false)
+                            ->exists();
                     })
-                    ->filter(function ($depositPeriod) {
-                        return $depositPeriod->status == true;
-                    })
-                    ->pluck('due_date')
-                    ->map(function ($dueDate) {
-                        return $dueDate ? Carbon::parse($dueDate) : null;
-                    })
-                    ->filter()
-                    ->sort()
-                    ->last();
+                    ->contains(true);
 
-
-                if (!$lastDueDate) {
-                    return;
-                }
-
-                // Check if the scheme should be closed
+                // Check if the scheme's duration is over
                 if (
-                    Carbon::now()->greaterThan($startDate) ||
-                    $lastDueDate->greaterThanOrEqualTo($expectedEndDate)
+                    $startDate->diffInMonths($currentDate) >= $duration
+                    ||
+                    (
+                        $startDate->diffInMonths($currentDate) >= $flexibility_duration
+                        && $userSubscription->scheme->scheme_type_id !== SchemeType::FIXED_PLAN
+                        && $hasUnpaidPeriods
+                    )
                 ) {
 
-                    $userSubscription->update(['is_closed' => true]);
+                    $userSubscription->update(
+                        [
+                            'reason' => 'Scheme period of months completed',
+                            'is_closed' => true
+                        ]
+                    );
 
                     // Update or create the subscription history
                     SubscriptionHistory::updateOrCreate(
                         ['subscription_id' => $userSubscription->id],
-                        ['is_closed' => true]
+                        [
+                            'description' => 'Scheme period of months completed',
+                            'is_closed' => true
+                        ]
                     );
+
+                    Log::info('Scheme closed successfully for subscription ID: ' . $userSubscription->id);
                 }
             });
         } catch (\Exception $e) {

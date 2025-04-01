@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+// use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 use App\Services\SchemeService;
@@ -9,6 +10,7 @@ use App\Helpers\LogActivity;
 use App\Models\SchemeType;
 use App\Http\Requests\SchemePostRequest;
 use App\Http\Requests\SchemeUpdateRequest;
+use App\Models\Scheme;
 
 class SchemeController extends Controller
 {
@@ -38,6 +40,7 @@ class SchemeController extends Controller
     public function store(SchemePostRequest $request, SchemeService $schemeService)
     {
         $input = $request->all();
+        $input['pdf_file'] = $request->file('pdf_file');
         $schemeService->createScheme($input);
         LogActivity::addToLog('New Scheme Added by ' . auth()->user()->name);
 
@@ -53,7 +56,7 @@ class SchemeController extends Controller
         $scheme = $schemeService->getScheme($id);
         $schemeTypes = SchemeType::all();
 
-        return view('schemes.edit', compact('scheme','schemeTypes'));
+        return view('schemes.edit', compact('scheme', 'schemeTypes'));
     }
 
     /**
@@ -63,6 +66,8 @@ class SchemeController extends Controller
     {
         $id = decrypt($id);
         $input = $request->all();
+        $input['pdf_file'] = $request->hasFile('pdf_file') ? 
+            $request->file('pdf_file') : NULL;
         $scheme = $schemeService->getScheme($id);
         $schemeService->updateScheme($scheme, $input);
         LogActivity::addToLog('Scheme ' . $input['title'] . ' updated by ' . auth()->user()->name);
@@ -79,8 +84,15 @@ class SchemeController extends Controller
         $scheme = $schemeService->getScheme($id);
         $schemeService->deleteScheme($scheme);
         LogActivity::addToLog('Scheme ' . $scheme->title . ' removed by ' . auth()->user()->name);
-        
+
         return redirect()->back()
             ->with('success', 'Scheme deleted successfully');
     }
+
+    // public function viewPdf($id)
+    // {
+    //     $schemePdf = Scheme::findOrFail($id)->pdf_file;
+
+    //     return Pdf::stream($schemePdf);
+    // }
 }

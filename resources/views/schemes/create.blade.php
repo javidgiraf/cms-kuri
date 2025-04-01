@@ -30,7 +30,7 @@
                                 <div class="col-sm-10">
                                     <input type="text" id="title" name="title" class="form-control @error('title') is-invalid @enderror" value="{{old('title')}}" placeholder="Enter New Scheme">
                                     @error('title')
-                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -39,7 +39,7 @@
                                 <div class="col-sm-10">
                                     <input type="text" id="title" name="total_period" class="form-control @error('total_period') is-invalid @enderror" value="{{old('total_period')}}" placeholder="Enter Total Period (in Months)">
                                     @error('total_period')
-                                        <span class="invalid-feedback">{{ $message }}</span>
+                                    <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
                             </div>
@@ -49,10 +49,22 @@
                                     <select class="form-control select2 @error('scheme_type_id') is-invalid @enderror" name="scheme_type_id">
                                         <option selected disabled>Select a Scheme Type</option>
                                         @foreach($schemeTypes as $scheme)
-                                            <option <?= old('scheme_type_id') == $scheme->id ? 'selected' : '' ?> value="{{ $scheme->id }}">{{ $scheme->title }}</option>
+                                        <option <?= old('scheme_type_id') == $scheme->id ? 'selected' : '' ?> value="{{ $scheme->id }}">{{ $scheme->title }}</option>
                                         @endforeach
                                     </select>
                                     @error('scheme_type_id')
+                                    <span class="invalid-feedback">{{ $message }}</span>
+                                    @enderror
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <label for="inputText" class="col-sm-2 col-form-label">Upload File </label>
+                                <div class="col-sm-10">
+                                    <div class="mb-3">
+                                        
+                                        <input class="form-control @error('pdf_file') is-invalid @enderror" type="file" name="pdf_file" id="schemeFile">
+                                    </div>
+                                    @error('pdf_file')
                                         <span class="invalid-feedback">{{ $message }}</span>
                                     @enderror
                                 </div>
@@ -165,8 +177,8 @@
         }
     });
 
-    $(function(){
-       $(".select2").select2(); 
+    $(function() {
+        $(".select2").select2();
     });
 </script>
 @endpush
